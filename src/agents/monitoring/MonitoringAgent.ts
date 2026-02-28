@@ -79,10 +79,9 @@ export class MonitoringAgent {
    * Full observation pipeline:
    * 1. Navigate to the target page (with retries)
    * 2. Wait for DOM readiness
-   * 3. Dismiss any overlays (cookie consent, login modals)
-   * 4. Extract latest post permalink + metadata
-   * 5. Compute DOM hash
-   * 6. Return structured Observation
+   * 3. Extract latest post permalink via embedded JSON Blob (bypasses login wall)
+   * 4. Compute hash
+   * 5. Return structured Observation
    */
   async observe(): Promise<Observation> {
     if (!this.page) {
@@ -96,37 +95,54 @@ export class MonitoringAgent {
     // Step 1: Navigate with retries
     await this.navigateWithRetry();
 
-    // Step 2: Dismiss overlays
-    await this.dismissOverlays();
+    // Step 2: Wait a moment for JS to hydrate the JSON blobs
+    await this.sleep(3000);
 
-    // Step 3: Wait for feed container
-    const feedEl = await this.resolveSelector(this.config.selectors.feedContainer);
-    if (!feedEl) {
+    // Step 3: Extract post IDs from HTML
+    const html = await this.page.content();
+
+    // Facebook obfuscates the JSON in the DOM, so we use regex to find the ID.
+    // It usually appears as "top_level_post_id":"12345" or HTML-encoded variants.
+    const regexOptions = [
+      /"top_level_post_id":"(\d+)"/g,
+      /&quot;top_level_post_id&quot;:&quot;(\d+)&quot;/g,
+      /"post_id":"(\d+)"/g,
+      /&quot;post_id&quot;:&quot;(\d+)&quot;/g
+    ];
+
+    const extractedIds = new Set<string>();
+    for (const regex of regexOptions) {
+      let match;
+      while ((match = regex.exec(html)) !== null) {
+        extractedIds.add(match[1]);
+      }
+    }
+
+    const postIds = Array.from(extractedIds);
+
+    if (postIds.length === 0) {
       throw new MonitoringError(
-        MonitoringErrorCode.SELECTOR_NOT_FOUND,
-        'Could not locate the feed container on the page.',
+        MonitoringErrorCode.EXTRACTION_FAILED,
+        'Could not locate any post IDs in the page source via JSON blobs.',
         { retryable: true },
       );
     }
 
-    // Step 4: Find the latest post
-    const postEl = await this.resolveSelector(this.config.selectors.postItem);
-    if (!postEl) {
-      throw new MonitoringError(
-        MonitoringErrorCode.SELECTOR_NOT_FOUND,
-        'Could not locate any post items in the feed.',
-        { retryable: true },
-      );
-    }
+    // Assuming the first ID found is the most recent or pinned post
+    const latestPostId = postIds[0];
 
-    // Step 5: Extract permalink
-    const permalink = await this.extractPermalink(postEl);
+    // Normalize absolute URL
+    const baseUrl = this.config.pageUrl.endsWith('/') ? this.config.pageUrl.slice(0, -1) : this.config.pageUrl;
+    const permalink = `${baseUrl}/posts/${latestPostId}`;
 
-    // Step 6: Extract content preview
-    const contentPreview = await this.extractContentPreview(postEl);
+    // Step 4: Extract content preview (best effort)
+    // Attempting to extract text from the DOM is brittle; fallback to a generic message
+    const contentPreview = `[Extracted post ID: ${latestPostId} via JSON blob] Check the link for full content.`;
 
-    // Step 7: Compute DOM hash of the feed
-    const rawDomHash = await this.computeDomHash(feedEl);
+    // Step 5: Compute DOM hash
+    // Hashing the list of post IDs provides an extremely stable change detector for the feed!
+    const changeSignature = postIds.slice(0, 10).join(',');
+    const rawDomHash = createHash('sha256').update(changeSignature).digest('hex');
 
     const observation: Observation = {
       latest_post_link: permalink,
@@ -175,161 +191,7 @@ export class MonitoringAgent {
     );
   }
 
-  // Overlay Dismissal
 
-  /**
-   * Attempt to dismiss common Facebook overlays:
-   * - Cookie consent banners
-   * - Login modals
-   */
-  private async dismissOverlays(): Promise<void> {
-    const overlaySelectors = [
-      // Cookie consent buttons
-      'button[data-cookiebanner="accept_button"]',
-      'button[data-testid="cookie-policy-manage-dialog-accept-button"]',
-      'button[title="Allow all cookies"]',
-      'button[title="Accept All"]',
-      // "Not Now" on login modals
-      'div[role="dialog"] a[role="button"]',
-      'div[role="dialog"] button:has-text("Not Now")',
-      'div[role="dialog"] button:has-text("Close")',
-      // "See more" / "Continue" overlays
-      'a[role="button"]:has-text("Not now")',
-    ];
-
-    for (const selector of overlaySelectors) {
-      try {
-        const el = await this.page!.$(selector);
-        if (el) {
-          await el.click();
-          this.logger.debug(`Dismissed overlay: ${selector}`);
-          await this.sleep(500); // Brief pause after dismissal
-        }
-      } catch {
-        // Overlay not found or not clickable — safe to ignore
-      }
-    }
-  }
-
-  // Selector Resolution
-
-  /**
-   * Try each selector in a SelectorEntry in order.
-   * Returns the first matching ElementHandle, or null if none match.
-   */
-  private async resolveSelector(
-    entry: SelectorEntry,
-  ): Promise<import('playwright').ElementHandle | null> {
-    for (const selector of entry.selectors) {
-      try {
-        this.logger.debug(`Trying selector [${entry.name}]: ${selector}`);
-        const el = await this.page!.waitForSelector(selector, {
-          timeout: this.config.selectorTimeoutMs,
-          state: 'attached',
-        });
-        if (el) {
-          this.logger.debug(`Matched selector [${entry.name}]: ${selector}`);
-          return el;
-        }
-      } catch {
-        this.logger.debug(`Selector not found [${entry.name}]: ${selector}`);
-      }
-    }
-
-    this.logger.warn(`All selectors exhausted for [${entry.name}]`);
-    return null;
-  }
-
-  // Extraction
-
-  /**
-   * Extract the permalink from the first matching post element.
-   * Walks through the postPermalink selector entries within the post scope.
-   */
-  private async extractPermalink(postEl: import('playwright').ElementHandle): Promise<string> {
-    for (const selector of this.config.selectors.postPermalink.selectors) {
-      try {
-        const linkEl = await postEl.$(selector);
-        if (linkEl) {
-          const href = await linkEl.getAttribute('href');
-          if (href) {
-            // Normalize: ensure absolute URL
-            const absoluteUrl = href.startsWith('http') ? href : `https://www.facebook.com${href}`;
-            this.logger.debug(`Extracted permalink: ${absoluteUrl}`);
-            return absoluteUrl;
-          }
-        }
-      } catch {
-        // Continue to next selector
-      }
-    }
-
-    // Fallback: try getting any link from the post
-    try {
-      const anyLink = await postEl.$('a[href]');
-      if (anyLink) {
-        const href = await anyLink.getAttribute('href');
-        if (href && (href.includes('/posts/') || href.includes('story_fbid'))) {
-          const absoluteUrl = href.startsWith('http') ? href : `https://www.facebook.com${href}`;
-          return absoluteUrl;
-        }
-      }
-    } catch {
-      // Ignore
-    }
-
-    throw new MonitoringError(
-      MonitoringErrorCode.EXTRACTION_FAILED,
-      'Could not extract permalink from the latest post.',
-      { retryable: true },
-    );
-  }
-
-  /**
-   * Extract a text content preview from the post, truncated to 280 characters.
-   */
-  private async extractContentPreview(postEl: import('playwright').ElementHandle): Promise<string> {
-    for (const selector of this.config.selectors.postContent.selectors) {
-      try {
-        const contentEl = await postEl.$(selector);
-        if (contentEl) {
-          const text = await contentEl.textContent();
-          if (text && text.trim().length > 0) {
-            const preview = text.trim().slice(0, 280);
-            this.logger.debug(`Extracted content preview: "${preview.slice(0, 50)}..."`);
-            return preview;
-          }
-        }
-      } catch {
-        // Continue to next selector
-      }
-    }
-
-    // If we can't extract content, return empty string rather than failing
-    this.logger.warn('Could not extract content preview; returning empty string.');
-    return '';
-  }
-
-  // DOM Hashing
-
-  /**
-   * Compute a SHA-256 hash of the feed container's innerHTML.
-   * Used for change detection between observation cycles.
-   */
-  private async computeDomHash(feedEl: import('playwright').ElementHandle): Promise<string> {
-    try {
-      const innerHTML = await feedEl.evaluate((el: any) => el.innerHTML);
-      const hash = createHash('sha256').update(innerHTML).digest('hex');
-      this.logger.debug(`DOM hash: ${hash.slice(0, 16)}...`);
-      return hash;
-    } catch (err) {
-      throw new MonitoringError(
-        MonitoringErrorCode.EXTRACTION_FAILED,
-        `Failed to compute DOM hash: ${(err as Error).message}`,
-        { retryable: false, cause: err as Error },
-      );
-    }
-  }
 
   // Utilities
 
