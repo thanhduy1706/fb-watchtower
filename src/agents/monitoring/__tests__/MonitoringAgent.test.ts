@@ -4,6 +4,11 @@ import type { MonitoringAgentConfig } from '../../../types/index.js';
 
 // ─── Mock Playwright (MUST be hoisted before any imports that use it) ──
 
+const { mockLaunch, mockUse } = vi.hoisted(() => ({
+  mockLaunch: vi.fn(),
+  mockUse: vi.fn(),
+}));
+
 const mockGoto = vi.fn();
 const mockPageContent = vi.fn();
 const mockPageClose = vi.fn();
@@ -11,12 +16,16 @@ const mockContextNewPage = vi.fn();
 const mockContextClose = vi.fn();
 const mockBrowserNewContext = vi.fn();
 const mockBrowserClose = vi.fn();
-const mockLaunch = vi.fn();
 
-vi.mock('playwright', () => ({
+vi.mock('playwright-extra', () => ({
   chromium: {
     launch: (...args: unknown[]) => mockLaunch(...args),
+    use: (...args: unknown[]) => mockUse(...args),
   },
+}));
+
+vi.mock('puppeteer-extra-plugin-stealth', () => ({
+  default: vi.fn(() => ({})),
 }));
 
 // Import agent AFTER mock is set up

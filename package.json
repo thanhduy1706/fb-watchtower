@@ -19,6 +19,8 @@
     "dotenv": "^16.4.0",
     "pg": "^8.19.0",
     "playwright": "^1.58.2",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "winston": "^3.19.0"
   },
   "devDependencies": {

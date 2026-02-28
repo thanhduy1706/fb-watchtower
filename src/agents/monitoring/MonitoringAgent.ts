@@ -1,21 +1,25 @@
 import { createHash } from 'node:crypto';
-import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
+import type { Browser, BrowserContext, Page } from 'playwright';
+import { chromium } from 'playwright-extra';
+import stealthPlugin from 'puppeteer-extra-plugin-stealth';
 import type { MonitoringAgentConfig, Observation, SelectorEntry } from '../../types/index.js';
 import { DEFAULT_AGENT_CONFIG } from '../../config/index.js';
 import { MonitoringError, MonitoringErrorCode } from './errors.js';
 import { createLogger, type Logger } from '../../core/logger.js';
 
+// Apply stealth plugin globally to playwright-extra
+chromium.use(stealthPlugin());
+
 /**
  * Monitoring (Perception) Agent
  *
  * Launches a headless Chromium browser via Playwright, navigates to a target
- * Facebook page, extracts the latest post permalink and metadata, and returns
- * a structured observation object.
+ * Facebook page, extracts the latest post metadata via embedded JSON blobs,
+ * and returns a structured observation object.
  *
  * Resilience features:
+ * - Playwright Stealth plugin to evade bot detection
  * - Retry navigation up to N times with exponential backoff
- * - Fallback CSS selectors for each extraction target
- * - Separate timeouts for navigation and selector waits
  * - Structured error reporting
  */
 export class MonitoringAgent {
