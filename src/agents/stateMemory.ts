@@ -29,32 +29,43 @@ export class StateMemory {
   }
 
   /**
-   * Returns the last stored post link, or null if none exists.
+   * Returns the array of recently stored post links.
+   * Internally parses the JSON array.
    */
-  async getLastPost(): Promise<string | null> {
+  async getRecentPosts(): Promise<string[]> {
     const res = await this.pool.query('SELECT value FROM state WHERE key = $1', [STATE_KEY]);
-    return res.rows.length > 0 ? res.rows[0].value : null;
+    if (res.rows.length === 0) return [];
+
+    try {
+      const parsed = JSON.parse(res.rows[0].value);
+      return Array.isArray(parsed) ? parsed : [res.rows[0].value];
+    } catch {
+      return [res.rows[0].value]; // fallback for old single-string state
+    }
   }
 
   /**
-   * Atomically stores the post link.
-   * No-ops if the value is identical to the current one (no duplicate writes).
+   * Atomically stores the post link, keeping a history of up to 5 posts.
+   * No-ops if the value is already in the recent history.
    */
   async setLastPost(postLink: string): Promise<void> {
     if (typeof postLink !== 'string' || postLink.trim() === '') {
       throw new Error('postLink must be a non-empty string');
     }
 
-    const current = await this.getLastPost();
-    if (current === postLink) {
+    const recents = await this.getRecentPosts();
+    if (recents.includes(postLink)) {
       return; // idempotent — skip duplicate write
     }
+
+    const updated = [postLink, ...recents].slice(0, 5);
+    const valueStr = JSON.stringify(updated);
 
     await this.pool.query(
       `INSERT INTO state (key, value, updated_at)
        VALUES ($1, $2, CURRENT_TIMESTAMP)
        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP`,
-      [STATE_KEY, postLink],
+      [STATE_KEY, valueStr],
     );
   }
 

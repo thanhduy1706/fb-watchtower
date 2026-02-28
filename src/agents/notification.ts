@@ -97,39 +97,71 @@ export class NotificationAgent {
   // ── Private helpers ─────────────────────────────────────────────
 
   #buildPayload(decision: Decision): any {
-    const detectedAt = new Date().toISOString();
+    const dateStr = new Date().toLocaleString('en-US', {
+      timeZone: 'Asia/Ho_Chi_Minh',
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
 
-    return {
-      blocks: [
-        {
-          type: 'header',
-          text: { type: 'plain_text', text: '📢 New Facebook Post', emoji: true },
+    const blocks: any[] = [
+      {
+        type: 'header',
+        text: { type: 'plain_text', text: '📢', emoji: true },
+      },
+      {
+        type: 'divider',
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Link:*\n<${decision.postLink}|View on Facebook>`,
         },
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `*New post detected:*\n<${decision.postLink}|View Post>`,
+      },
+    ];
+
+    if (decision.contentPreview) {
+      blocks.push({
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: `*Preview:*\n> ${decision.contentPreview.replace(/\n/g, '\n> ')}`,
+        },
+      });
+    }
+
+    blocks.push(
+      {
+        type: 'divider',
+      },
+      {
+        type: 'actions',
+        elements: [
+          {
+            type: 'button',
+            text: {
+              type: 'plain_text',
+              text: 'View Post',
+              emoji: true,
+            },
+            url: decision.postLink!,
+            action_id: 'view_post_btn',
+            style: 'primary',
           },
-        },
-        ...(decision.contentPreview
-          ? [
-              {
-                type: 'section',
-                text: {
-                  type: 'plain_text',
-                  text: decision.contentPreview,
-                  emoji: true,
-                },
-              },
-            ]
-          : []),
-        {
-          type: 'context',
-          elements: [{ type: 'mrkdwn', text: `Detected at ${detectedAt}` }],
-        },
-      ],
-    };
+        ],
+      },
+      {
+        type: 'context',
+        elements: [
+          {
+            type: 'mrkdwn',
+            text: `*fb-watchtower* • Detected at ${dateStr} (ICT)`,
+          },
+        ],
+      },
+    );
+
+    return { blocks };
   }
 
   #buildResult(

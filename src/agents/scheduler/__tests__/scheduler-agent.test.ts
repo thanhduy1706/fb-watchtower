@@ -11,8 +11,8 @@ function createSilentLogger() {
 // ── SchedulerAgent ───────────────────────────────────────────────
 
 describe('SchedulerAgent', () => {
-  let eventBus;
-  let agent;
+  let eventBus: EventBus;
+  let agent: SchedulerAgent;
 
   beforeEach(() => {
     vi.useFakeTimers();

@@ -31,24 +31,24 @@ export class ReasonerAgent {
 
     this.#log.info(`Evaluating observation — post: ${cleanCurrent.slice(0, 60)}…`);
 
-    const lastPost = await this.#memory.getLastPost();
+    const recentPosts = await this.#memory.getRecentPosts();
 
-    if (!lastPost) {
+    if (recentPosts.length === 0) {
       // First ever run — seed the memory, don't trigger notification
       this.#log.info('No prior state found — seeding memory on first run.');
-      await this.#memory.setLastPost(latest_post_link);
+      await this.#memory.setLastPost(cleanCurrent);
       return { changeDetected: false, postLink: null };
     }
 
-    const cleanLast = lastPost ? this.#normalizeUrl(lastPost) : null;
+    const cleanRecents = recentPosts.map((p) => this.#normalizeUrl(p));
 
-    if (cleanLast === cleanCurrent) {
-      this.#log.info('Post unchanged — no notification needed.');
+    if (cleanRecents.includes(cleanCurrent)) {
+      this.#log.info('Post already seen recently — no notification needed.');
       return { changeDetected: false, postLink: null };
     }
 
     // New post detected!
-    this.#log.info(`New post detected! Previous: ${cleanLast?.slice(0, 60)}…`);
+    this.#log.info(`New post detected! Previous: ${cleanRecents[0]?.slice(0, 60) ?? 'none'}…`);
     this.#log.info(`New link: ${cleanCurrent.slice(0, 60)}…`);
     return { changeDetected: true, postLink: cleanCurrent, contentPreview: content_preview };
   }
