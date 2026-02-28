@@ -1,0 +1,82 @@
+yarn run v1.22.22
+$ tsx src/index.ts
+2026-02-27T07:32:03.389Z info: [Main] fb-watchtower starting
+2026-02-27T07:32:03.526Z info: [Monitor] Initializing browser...
+2026-02-27T07:32:03.785Z info: [Monitor] Browser initialized successfully.
+2026-02-27T07:32:03.786Z info: [Orchestrator] Started  listening for scheduler:run events
+2026-02-27T07:32:03.786Z info: [Scheduler] Started  window 09:0021:00 Asia/Ho_Chi_Minh, polling every 30000ms
+2026-02-27T07:32:03.803Z info: [Scheduler] Signal  RUN: Entered operational window (27/02/2026, 14:32:03)
+2026-02-27T07:32:03.804Z info: [Orchestrator] Step 1/4  Observing
+2026-02-27T07:32:03.804Z info: [Monitor] Navigation attempt 1/3...
+2026-02-27T07:32:03.806Z info: [Main] All systems go 
+2026-02-27T07:32:04.842Z info: [Monitor] Navigation succeeded.
+2026-02-27T07:32:33.808Z warn: [Orchestrator] Cycle already in progress  skipping
+2026-02-27T07:32:45.399Z info: [Monitor] Observation complete. {"latest_post_link":"https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzRDgHJK6odxcHEZ614xbWj8bYnDDNp5Dfxzy8wmQyW8uWgAqsLwPXAhXl?__cft__[0]=AZYha8tN90Rsyy9ssajDEXm6k1ldb9lsbFvNc1qOwRia60lPQXRuPSgY6NgSpdS7a-P1JiCPQhSZ7wcvwRjc83zVMP-No6jZFS6L7g3BkeQ4AMVadr257wNIqNtLC5wY_ujHODNZg-tBp69ET_5OwbLVycSlx0FeuU9Y2rEoVVpyeKwHmuuc1jzqqnE-XEY-dhU&__tn__=%2CO%2CP-R","extracted_at":"2026-02-27T07:32:45.399Z","content_preview":"H Ni s c m t cp cu, vo tng ng ngch cu ngiH Ni s c m t cp cu, vo tng ng ngch cu ngi","raw_dom_hash":"8644752ff8f0110b93250816b71180f79bd0979bb574428a97c70f9eb6c531ed"}
+2026-02-27T07:32:45.399Z info: [Orchestrator] Step 2/4  Evaluating
+2026-02-27T07:32:45.400Z info: [Reasoner] Evaluating observation  post: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzR
+2026-02-27T07:32:45.527Z info: [Reasoner] New post detected! Previous: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzR
+2026-02-27T07:32:45.527Z info: [Reasoner] New link: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzR
+2026-02-27T07:32:45.527Z info: [Orchestrator] Step 3/4  Notifying
+2026-02-27T07:32:45.527Z info: [Notification] Sending Slack notification for: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzRDgHJK6odxcHEZ614xbWj8bYnDDNp5Dfxzy8wmQyW8uWgAqsLwPXAhXl?__cft__[0]=AZYha8tN90Rsyy9ssajDEXm6k1ldb9lsbFvNc1qOwRia60lPQXRuPSgY6NgSpdS7a-P1JiCPQhSZ7wcvwRjc83zVMP-No6jZFS6L7g3BkeQ4AMVadr257wNIqNtLC5wY_ujHODNZg-tBp69ET_5OwbLVycSlx0FeuU9Y2rEoVVpyeKwHmuuc1jzqqnE-XEY-dhU&__tn__=%2CO%2CP-R
+2026-02-27T07:32:46.312Z info: [Notification] Delivered (200) on attempt 1
+2026-02-27T07:32:46.312Z info: [Orchestrator] Step 4/4  Updating memory
+2026-02-27T07:32:46.367Z info: [Orchestrator] Cycle complete  new post: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzRDgHJK6odxcHEZ614xbWj8bYnDDNp5Dfxzy8wmQyW8uWgAqsLwPXAhXl?__cft__[0]=AZYha8tN90Rsyy9ssajDEXm6k1ldb9lsbFvNc1qOwRia60lPQXRuPSgY6NgSpdS7a-P1JiCPQhSZ7wcvwRjc83zVMP-No6jZFS6L7g3BkeQ4AMVadr257wNIqNtLC5wY_ujHODNZg-tBp69ET_5OwbLVycSlx0FeuU9Y2rEoVVpyeKwHmuuc1jzqqnE-XEY-dhU&__tn__=%2CO%2CP-R
+2026-02-27T07:33:03.816Z info: [Orchestrator] Step 1/4  Observing
+2026-02-27T07:33:03.816Z info: [Monitor] Navigation attempt 1/3...
+2026-02-27T07:33:04.542Z info: [Monitor] Navigation succeeded.
+2026-02-27T07:33:33.822Z warn: [Orchestrator] Cycle already in progress  skipping
+2026-02-27T07:33:44.770Z info: [Monitor] Observation complete. {"latest_post_link":"https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzRDgHJK6odxcHEZ614xbWj8bYnDDNp5Dfxzy8wmQyW8uWgAqsLwPXAhXl?__cft__[0]=AZaFes5yFRRvhPXr2kEROa2c4NfY8Rih-Zi82TEfNGQYppVFuqvE9GVl_8jarsPhShb1BuapV7xgmkVOaqQkgQyRGWA00OvuSw7eGxtZ6VpCTkyBH-neLbjH3H-exRCTEG2YWqrdcLjrxTLP4s7vuBQAVQJqwzW0ulOGHKlwGd7CSpF1tQ3Rh_rvWENwbM6-21E&__tn__=%2CO%2CP-R","extracted_at":"2026-02-27T07:33:44.770Z","content_preview":"H Ni s c m t cp cu, vo tng ng ngch cu ngiH Ni s c m t cp cu, vo tng ng ngch cu ngi","raw_dom_hash":"3f2be9cd6c574090ad859ca8a2f669d834f795f2aa275d467586e51bfd1923de"}
+2026-02-27T07:33:44.770Z info: [Orchestrator] Step 2/4  Evaluating
+2026-02-27T07:33:44.770Z info: [Reasoner] Evaluating observation  post: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzR
+2026-02-27T07:33:44.897Z info: [Reasoner] New post detected! Previous: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzR
+2026-02-27T07:33:44.898Z info: [Reasoner] New link: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzR
+2026-02-27T07:33:44.898Z info: [Orchestrator] Step 3/4  Notifying
+2026-02-27T07:33:44.898Z info: [Notification] Sending Slack notification for: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzRDgHJK6odxcHEZ614xbWj8bYnDDNp5Dfxzy8wmQyW8uWgAqsLwPXAhXl?__cft__[0]=AZaFes5yFRRvhPXr2kEROa2c4NfY8Rih-Zi82TEfNGQYppVFuqvE9GVl_8jarsPhShb1BuapV7xgmkVOaqQkgQyRGWA00OvuSw7eGxtZ6VpCTkyBH-neLbjH3H-exRCTEG2YWqrdcLjrxTLP4s7vuBQAVQJqwzW0ulOGHKlwGd7CSpF1tQ3Rh_rvWENwbM6-21E&__tn__=%2CO%2CP-R
+2026-02-27T07:33:45.599Z info: [Notification] Delivered (200) on attempt 1
+2026-02-27T07:33:45.599Z info: [Orchestrator] Step 4/4  Updating memory
+2026-02-27T07:33:45.646Z info: [Orchestrator] Cycle complete  new post: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzRDgHJK6odxcHEZ614xbWj8bYnDDNp5Dfxzy8wmQyW8uWgAqsLwPXAhXl?__cft__[0]=AZaFes5yFRRvhPXr2kEROa2c4NfY8Rih-Zi82TEfNGQYppVFuqvE9GVl_8jarsPhShb1BuapV7xgmkVOaqQkgQyRGWA00OvuSw7eGxtZ6VpCTkyBH-neLbjH3H-exRCTEG2YWqrdcLjrxTLP4s7vuBQAVQJqwzW0ulOGHKlwGd7CSpF1tQ3Rh_rvWENwbM6-21E&__tn__=%2CO%2CP-R
+2026-02-27T07:34:03.829Z info: [Orchestrator] Step 1/4  Observing
+2026-02-27T07:34:03.830Z info: [Monitor] Navigation attempt 1/3...
+2026-02-27T07:34:04.486Z info: [Monitor] Navigation succeeded.
+2026-02-27T07:34:33.843Z warn: [Orchestrator] Cycle already in progress  skipping
+2026-02-27T07:34:44.771Z info: [Monitor] Observation complete. {"latest_post_link":"https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzRDgHJK6odxcHEZ614xbWj8bYnDDNp5Dfxzy8wmQyW8uWgAqsLwPXAhXl?__cft__[0]=AZZxbhTnOqGkG8yzgkkeG-5tvLDCkCNN1x1UoUr3mOzsuSrXRzMBJrcnHkaKE5tkOo9_y--dLnDdMdL76c4ZzQVIYJSGrC8FykzyGirvAU4X3-CgfCbz9ea3UL8Hdd4UfR_ruzeLC8aUkbNs-YMF60K3RKfPKXF0HlIcpb3DknIG-YeT_nn6n95mgDrlqbuBNo0&__tn__=%2CO%2CP-R","extracted_at":"2026-02-27T07:34:44.771Z","content_preview":"H Ni s c m t cp cu, vo tng ng ngch cu ngiH Ni s c m t cp cu, vo tng ng ngch cu ngi","raw_dom_hash":"b0963579d8dc29543a1c7bbc072b8a80ef1b3d5f973f06f4d92931018521d7aa"}
+2026-02-27T07:34:44.772Z info: [Orchestrator] Step 2/4  Evaluating
+2026-02-27T07:34:44.772Z info: [Reasoner] Evaluating observation  post: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzR
+2026-02-27T07:34:44.898Z info: [Reasoner] New post detected! Previous: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzR
+2026-02-27T07:34:44.898Z info: [Reasoner] New link: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzR
+2026-02-27T07:34:44.898Z info: [Orchestrator] Step 3/4  Notifying
+2026-02-27T07:34:44.898Z info: [Notification] Sending Slack notification for: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzRDgHJK6odxcHEZ614xbWj8bYnDDNp5Dfxzy8wmQyW8uWgAqsLwPXAhXl?__cft__[0]=AZZxbhTnOqGkG8yzgkkeG-5tvLDCkCNN1x1UoUr3mOzsuSrXRzMBJrcnHkaKE5tkOo9_y--dLnDdMdL76c4ZzQVIYJSGrC8FykzyGirvAU4X3-CgfCbz9ea3UL8Hdd4UfR_ruzeLC8aUkbNs-YMF60K3RKfPKXF0HlIcpb3DknIG-YeT_nn6n95mgDrlqbuBNo0&__tn__=%2CO%2CP-R
+2026-02-27T07:34:46.072Z info: [Notification] Delivered (200) on attempt 1
+2026-02-27T07:34:46.072Z info: [Orchestrator] Step 4/4  Updating memory
+2026-02-27T07:34:46.127Z info: [Orchestrator] Cycle complete  new post: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzRDgHJK6odxcHEZ614xbWj8bYnDDNp5Dfxzy8wmQyW8uWgAqsLwPXAhXl?__cft__[0]=AZZxbhTnOqGkG8yzgkkeG-5tvLDCkCNN1x1UoUr3mOzsuSrXRzMBJrcnHkaKE5tkOo9_y--dLnDdMdL76c4ZzQVIYJSGrC8FykzyGirvAU4X3-CgfCbz9ea3UL8Hdd4UfR_ruzeLC8aUkbNs-YMF60K3RKfPKXF0HlIcpb3DknIG-YeT_nn6n95mgDrlqbuBNo0&__tn__=%2CO%2CP-R
+2026-02-27T07:35:03.846Z info: [Orchestrator] Step 1/4  Observing
+2026-02-27T07:35:03.846Z info: [Monitor] Navigation attempt 1/3...
+2026-02-27T07:35:04.472Z info: [Monitor] Navigation succeeded.
+2026-02-27T07:35:33.852Z warn: [Orchestrator] Cycle already in progress  skipping
+2026-02-27T07:35:44.779Z info: [Monitor] Observation complete. {"latest_post_link":"https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzRDgHJK6odxcHEZ614xbWj8bYnDDNp5Dfxzy8wmQyW8uWgAqsLwPXAhXl?__cft__[0]=AZaZ8LqGjOURPxPKS5yQBVgGcDhc2-SqRP546Y0FUBAU3zS42vHexLFAXWw7gRvmRSRpDBWjUKNR0m_ghrtytHVMerdh68yfMFsbRMe8I3ApdDG3eYASZ_aIL8b6-CcuufdG_EpjUmZ1-gOfkX1saEpaeH17Fkbf8PkbNi1DgCezYCWAKEMGLDBBU4mkDfKn3SM&__tn__=%2CO%2CP-R","extracted_at":"2026-02-27T07:35:44.779Z","content_preview":"H Ni s c m t cp cu, vo tng ng ngch cu ngiH Ni s c m t cp cu, vo tng ng ngch cu ngi","raw_dom_hash":"06537d9858dd3702b966f3f69d24cebb5dfb3c47edd031e5946a9be3aa08032b"}
+2026-02-27T07:35:44.779Z info: [Orchestrator] Step 2/4  Evaluating
+2026-02-27T07:35:44.779Z info: [Reasoner] Evaluating observation  post: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzR
+2026-02-27T07:35:44.907Z info: [Reasoner] New post detected! Previous: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzR
+2026-02-27T07:35:44.908Z info: [Reasoner] New link: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzR
+2026-02-27T07:35:44.908Z info: [Orchestrator] Step 3/4  Notifying
+2026-02-27T07:35:44.908Z info: [Notification] Sending Slack notification for: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzRDgHJK6odxcHEZ614xbWj8bYnDDNp5Dfxzy8wmQyW8uWgAqsLwPXAhXl?__cft__[0]=AZaZ8LqGjOURPxPKS5yQBVgGcDhc2-SqRP546Y0FUBAU3zS42vHexLFAXWw7gRvmRSRpDBWjUKNR0m_ghrtytHVMerdh68yfMFsbRMe8I3ApdDG3eYASZ_aIL8b6-CcuufdG_EpjUmZ1-gOfkX1saEpaeH17Fkbf8PkbNi1DgCezYCWAKEMGLDBBU4mkDfKn3SM&__tn__=%2CO%2CP-R
+2026-02-27T07:35:45.895Z info: [Notification] Delivered (200) on attempt 1
+2026-02-27T07:35:45.895Z info: [Orchestrator] Step 4/4  Updating memory
+2026-02-27T07:35:45.945Z info: [Orchestrator] Cycle complete  new post: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzRDgHJK6odxcHEZ614xbWj8bYnDDNp5Dfxzy8wmQyW8uWgAqsLwPXAhXl?__cft__[0]=AZaZ8LqGjOURPxPKS5yQBVgGcDhc2-SqRP546Y0FUBAU3zS42vHexLFAXWw7gRvmRSRpDBWjUKNR0m_ghrtytHVMerdh68yfMFsbRMe8I3ApdDG3eYASZ_aIL8b6-CcuufdG_EpjUmZ1-gOfkX1saEpaeH17Fkbf8PkbNi1DgCezYCWAKEMGLDBBU4mkDfKn3SM&__tn__=%2CO%2CP-R
+2026-02-27T07:36:03.863Z info: [Orchestrator] Step 1/4  Observing
+2026-02-27T07:36:03.864Z info: [Monitor] Navigation attempt 1/3...
+2026-02-27T07:36:04.469Z info: [Monitor] Navigation succeeded.
+2026-02-27T07:36:33.877Z warn: [Orchestrator] Cycle already in progress  skipping
+2026-02-27T07:36:44.737Z info: [Monitor] Observation complete. {"latest_post_link":"https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzRDgHJK6odxcHEZ614xbWj8bYnDDNp5Dfxzy8wmQyW8uWgAqsLwPXAhXl?__cft__[0]=AZZhFG8EdjUZ_j5Eo1104zo9MuycUKM0TttJnUdEMZWft3xFR-NdAU5jCyypG_FqEW3NuyJVGmdzGo6YLynvMvUjy60VXjQ8lia-JM8LPK8Y0cHaBMEvDnVZeJEj6hGKnPoCS2jXf1Hk4bM3tnknhNCrdickB_uKIVxwqxUSSe-exGKvnws7DCuWK5YC5Ad8Q6k&__tn__=%2CO%2CP-R","extracted_at":"2026-02-27T07:36:44.737Z","content_preview":"H Ni s c m t cp cu, vo tng ng ngch cu ngiH Ni s c m t cp cu, vo tng ng ngch cu ngi","raw_dom_hash":"04eeeaac6ff7738fe275caf1500671b721c15f080baece4efda5e19eee19a8df"}
+2026-02-27T07:36:44.737Z info: [Orchestrator] Step 2/4  Evaluating
+2026-02-27T07:36:44.737Z info: [Reasoner] Evaluating observation  post: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzR
+2026-02-27T07:36:44.853Z info: [Reasoner] New post detected! Previous: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzR
+2026-02-27T07:36:44.853Z info: [Reasoner] New link: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzR
+2026-02-27T07:36:44.853Z info: [Orchestrator] Step 3/4  Notifying
+2026-02-27T07:36:44.853Z info: [Notification] Sending Slack notification for: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzRDgHJK6odxcHEZ614xbWj8bYnDDNp5Dfxzy8wmQyW8uWgAqsLwPXAhXl?__cft__[0]=AZZhFG8EdjUZ_j5Eo1104zo9MuycUKM0TttJnUdEMZWft3xFR-NdAU5jCyypG_FqEW3NuyJVGmdzGo6YLynvMvUjy60VXjQ8lia-JM8LPK8Y0cHaBMEvDnVZeJEj6hGKnPoCS2jXf1Hk4bM3tnknhNCrdickB_uKIVxwqxUSSe-exGKvnws7DCuWK5YC5Ad8Q6k&__tn__=%2CO%2CP-R
+2026-02-27T07:36:45.984Z info: [Notification] Delivered (200) on attempt 1
+2026-02-27T07:36:45.984Z info: [Orchestrator] Step 4/4  Updating memory
+2026-02-27T07:36:46.038Z info: [Orchestrator] Cycle complete  new post: https://www.facebook.com/tintucvtv24/posts/pfbid02yXEBP2VEzRDgHJK6odxcHEZ614xbWj8bYnDDNp5Dfxzy8wmQyW8uWgAqsLwPXAhXl?__cft__[0]=AZZhFG8EdjUZ_j5Eo1104zo9MuycUKM0TttJnUdEMZWft3xFR-NdAU5jCyypG_FqEW3NuyJVGmdzGo6YLynvMvUjy60VXjQ8lia-JM8LPK8Y0cHaBMEvDnVZeJEj6hGKnPoCS2jXf1Hk4bM3tnknhNCrdickB_uKIVxwqxUSSe-exGKvnws7DCuWK5YC5Ad8Q6k&__tn__=%2CO%2CP-R
+2026-02-27T07:37:03.879Z info: [Orchestrator] Step 1/4  Observing
+2026-02-27T07:37:03.880Z info: [Monitor] Navigation attempt 1/3...
+2026-02-27T07:37:04.475Z info: [Monitor] Navigation succeeded.

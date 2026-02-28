@@ -1,0 +1,13 @@
+.git
+.github
+node_modules
+dist
+coverage
+.vscode
+.idea
+.env
+.env.*
+Dockerfile
+Jenkinsfile
+docker-compose.yml
+README.md
