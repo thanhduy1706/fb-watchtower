@@ -8,15 +8,6 @@ import { NotificationAgent } from './agents/notification.js';
 import { ReasonerAgent } from './agents/reasoner.js';
 import { StateMemory } from './agents/stateMemory.js';
 
-// ── Bootstrap ────────────────────────────────────────────────────
-//
-// This entry point wires all agents through the Orchestrator.
-//
-// Individual agent modules (MonitoringAgent, ReasoningAgent, etc.)
-// are imported here once they are implemented. Until then, stub
-// placeholders are used so the orchestrator can be started.
-// ─────────────────────────────────────────────────────────────────
-
 const log = createLogger('Main');
 
 async function main() {
@@ -24,23 +15,16 @@ async function main() {
   const config: AppConfig = loadConfig();
   const eventBus = new EventBus();
 
-  // ── Instantiate agents ───────────────────────────────────────
-  // TODO: Replace stubs with real agent imports once implemented.
-
   const memory = new StateMemory(config);
-  await memory.init(); // Postgres requires async init
+  await memory.init();
 
-  // ── Monitoring Agent (LIVE) ──────────────────────────────────
   const monitor = new MonitoringAgent({ pageUrl: config.facebookPageUrl });
   await monitor.initialize();
 
-  // ── Reasoner Agent (LIVE) ────────────────────────────────────
   const reasoner = new ReasonerAgent(memory);
 
-  // ── Notification Agent (LIVE) ─────────────────────────────────
   const notifier = new NotificationAgent(config.slackWebhookUrl);
 
-  // ── Scheduler Agent (LIVE) ───────────────────────────────────
   const scheduler = new SchedulerAgent(eventBus, {
     windowStartHour: config.scheduleStart,
     windowEndHour: config.scheduleEnd,
@@ -48,7 +32,6 @@ async function main() {
     pollingIntervalMs: config.checkIntervalMs,
   });
 
-  // ── Wire orchestrator ────────────────────────────────────────
   const orchestrator = new Orchestrator({ monitor, reasoner, notifier, memory }, eventBus);
 
   orchestrator.start();
@@ -56,7 +39,6 @@ async function main() {
 
   log.info('All systems go ✓');
 
-  // ── Graceful shutdown ────────────────────────────────────────
   const shutdown = async (signal: string) => {
     log.info(`${signal} received — shutting down…`);
     scheduler.stop();
@@ -68,21 +50,6 @@ async function main() {
 
   process.on('SIGINT', () => shutdown('SIGINT'));
   process.on('SIGTERM', () => shutdown('SIGTERM'));
-}
-
-// ── Stub helper (temporary) ──────────────────────────────────────
-function stubAgent(name: string): any {
-  const noop = async () => {
-    log.warn(`${name} agent is a stub — no-op`);
-    return {};
-  };
-
-  return new Proxy(
-    {},
-    {
-      get: (_, prop) => noop,
-    },
-  );
 }
 
 main().catch((err: any) => {

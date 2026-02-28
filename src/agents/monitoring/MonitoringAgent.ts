@@ -30,7 +30,7 @@ export class MonitoringAgent {
     this.logger = createLogger('Monitor');
   }
 
-  // ─── Lifecycle ───────────────────────────────────────────
+  // Lifecycle
 
   /**
    * Launch headless Chromium and create an isolated browser context.
@@ -73,7 +73,7 @@ export class MonitoringAgent {
     this.logger.info('Browser shut down.');
   }
 
-  // ─── Main Pipeline ──────────────────────────────────────
+  // Main Pipeline
 
   /**
    * Full observation pipeline:
@@ -139,7 +139,7 @@ export class MonitoringAgent {
     return observation;
   }
 
-  // ─── Navigation ─────────────────────────────────────────
+  // Navigation
 
   /**
    * Navigate to the target page with retry and exponential backoff.
@@ -175,7 +175,7 @@ export class MonitoringAgent {
     );
   }
 
-  // ─── Overlay Dismissal ──────────────────────────────────
+  // Overlay Dismissal
 
   /**
    * Attempt to dismiss common Facebook overlays:
@@ -211,7 +211,7 @@ export class MonitoringAgent {
     }
   }
 
-  // ─── Selector Resolution ────────────────────────────────
+  // Selector Resolution
 
   /**
    * Try each selector in a SelectorEntry in order.
@@ -240,7 +240,7 @@ export class MonitoringAgent {
     return null;
   }
 
-  // ─── Extraction ─────────────────────────────────────────
+  // Extraction
 
   /**
    * Extract the permalink from the first matching post element.
@@ -310,7 +310,7 @@ export class MonitoringAgent {
     return '';
   }
 
-  // ─── DOM Hashing ────────────────────────────────────────
+  // DOM Hashing
 
   /**
    * Compute a SHA-256 hash of the feed container's innerHTML.
@@ -331,7 +331,7 @@ export class MonitoringAgent {
     }
   }
 
-  // ─── Utilities ──────────────────────────────────────────
+  // Utilities
 
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));

@@ -1,6 +1,7 @@
 import { EventBus, Events } from '../../core/eventBus.js';
 import { createLogger } from '../../core/logger.js';
-import { loadSchedulerPolicy, DEFAULT_SCHEDULER_POLICY, SchedulerPolicy } from './config.js';
+import { loadSchedulerPolicy, DEFAULT_SCHEDULER_POLICY } from './config.js';
+import type { SchedulerPolicy } from '../../types/scheduler.js';
 import { resolveCurrentTime, isWithinOperationalWindow, formatTimeForLog } from './utils.js';
 
 /**
@@ -46,7 +47,7 @@ export class SchedulerAgent {
     };
   }
 
-  // ── Lifecycle ──────────────────────────────────────────────────
+  // Lifecycle
 
   /** Start the polling loop. Idempotent — calling twice is a no-op. */
   start() {
@@ -78,7 +79,7 @@ export class SchedulerAgent {
     this.log.info('Stopped');
   }
 
-  // ── Public accessors ───────────────────────────────────────────
+  // Public accessors
 
   /** Returns an immutable snapshot of the current agent state. */
   getState() {
@@ -101,7 +102,7 @@ export class SchedulerAgent {
     return { ...this.policy };
   }
 
-  // ── Core tick logic ────────────────────────────────────────────
+  // Core tick logic
 
   /** @private One scheduling cycle: resolve time → decide → emit. */
   private tick() {
@@ -136,7 +137,7 @@ export class SchedulerAgent {
     }
   }
 
-  // ── Error handling ─────────────────────────────────────────────
+  // Error handling
 
   /** @private Safe fallback: emit PAUSE and log the error. */
   private handleTickError(err: unknown) {
@@ -156,7 +157,7 @@ export class SchedulerAgent {
     this.eventBus.emit(Events.SCHEDULER_PAUSE as any);
   }
 
-  // ── History tracking ───────────────────────────────────────────
+  // History tracking
 
   /** @private Append a transition entry; cap at MAX_HISTORY. */
   private recordTransition(signal: string, reason: string) {
@@ -171,7 +172,7 @@ export class SchedulerAgent {
     }
   }
 
-  // ── Formatting helpers ─────────────────────────────────────────
+  // Formatting helpers
 
   /** @private Format the operational window for log output. */
   private formatWindow() {

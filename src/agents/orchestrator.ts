@@ -27,7 +27,7 @@ export class Orchestrator {
     this.#log = logger ?? createLogger('Orchestrator');
   }
 
-  // ── Lifecycle ──────────────────────────────────────────────────
+  // Lifecycle
 
   start(): void {
     if (this.#started) return;
@@ -50,7 +50,7 @@ export class Orchestrator {
     this.#log.info('Stopped');
   }
 
-  // ── Pipeline ───────────────────────────────────────────────────
+  // Pipeline
 
   /**
    * Execute one full observe → evaluate → notify → remember cycle.
@@ -114,7 +114,7 @@ export class Orchestrator {
     }
   }
 
-  // ── Private helpers ────────────────────────────────────────────
+  // Private helpers
 
   #onRun = (): void => {
     this.#activePromise = this.runCycle().finally(() => {
