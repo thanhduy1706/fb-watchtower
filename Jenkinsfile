@@ -41,7 +41,7 @@ pipeline {
       steps {
         sh """
           echo "Building Docker image..."
-          docker build -t $IMAGE_NAME:$DATETIME -t $IMAGE_NAME:latest .
+          docker build --network host -t $IMAGE_NAME:$DATETIME -t $IMAGE_NAME:latest .
         """
       }
     }
@@ -60,6 +60,7 @@ pipeline {
 
           docker run -d \\
             --name "$CONTAINER_NAME" \\
+            --network host \\
             \$ENV_OPTS \\
             --restart unless-stopped \\
             "$IMAGE_NAME:latest"

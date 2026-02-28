@@ -4,7 +4,7 @@ FROM node:20-bookworm
 WORKDIR /app
 
 # Copy package definition files
-COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./
+COPY package.json package-lock.json* ./
 
 # Install project dependencies
 RUN npm install
