@@ -1,5 +1,6 @@
 import { Events, type EventBus } from '../core/eventBus.js';
 import { createLogger, type Logger } from '../core/logger.js';
+import { MonitoringError } from './monitoring/errors.js';
 
 export interface CycleResult {
   success: boolean;
@@ -74,7 +75,7 @@ export class Orchestrator {
     try {
       // Step 1 — Observe
       this.#log.info('Step 1/4 — Observing…');
-      const observation = await this.#agents.monitor.observe();
+      const observation = await this.#observeWithRetries();
 
       // Step 2 — Evaluate
       this.#log.info('Step 2/4 — Evaluating…');
@@ -121,6 +122,41 @@ export class Orchestrator {
       this.#activePromise = null;
     });
   };
+
+  async #observeWithRetries(): Promise<any> {
+    const maxAttempts = 3;
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        if (attempt > 1) {
+          this.#log.info(`Retrying observe attempt ${attempt}/${maxAttempts}…`);
+        }
+        return await this.#agents.monitor.observe();
+      } catch (err: unknown) {
+        lastError = err;
+
+        // Only retry for MonitoringError marked as retryable
+        if (!(err instanceof MonitoringError) || !err.retryable || attempt === maxAttempts) {
+          throw err;
+        }
+
+        this.#log.warn(
+          `Observe attempt ${attempt}/${maxAttempts} failed (${err.code}) — will retry shortly.`,
+        );
+
+        // Small linear backoff to avoid hammering the page
+        await this.#sleep(1000 * attempt);
+      }
+    }
+
+    // Defensive fallback — should be unreachable
+    throw lastError instanceof Error ? lastError : new Error('Unknown observe error');
+  }
+
+  #sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
 
   #buildResult(
     success: boolean,

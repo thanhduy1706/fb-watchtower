@@ -99,30 +99,20 @@ export class MonitoringAgent {
     // Step 1: Navigate with retries
     await this.navigateWithRetry();
 
-    // Step 2: Wait a moment for JS to hydrate the JSON blobs
-    await this.sleep(3000);
+    // Step 2 & 3: Poll the DOM for post IDs with early exit
+    const maxWaitMs = this.config.selectorTimeoutMs;
+    const pollIntervalMs = 500;
+    const startTime = Date.now();
+    let postIds: string[] = [];
 
-    // Step 3: Extract post IDs from HTML
-    const html = await this.page.content();
-
-    // Facebook obfuscates the JSON in the DOM, so we use regex to find the ID.
-    // It usually appears as "top_level_post_id":"12345" or HTML-encoded variants.
-    const regexOptions = [
-      /"top_level_post_id":"(\d+)"/g,
-      /&quot;top_level_post_id&quot;:&quot;(\d+)&quot;/g,
-      /"post_id":"(\d+)"/g,
-      /&quot;post_id&quot;:&quot;(\d+)&quot;/g
-    ];
-
-    const extractedIds = new Set<string>();
-    for (const regex of regexOptions) {
-      let match;
-      while ((match = regex.exec(html)) !== null) {
-        extractedIds.add(match[1]);
+    while (Date.now() - startTime < maxWaitMs) {
+      const html = await this.page.content();
+      postIds = this.#extractPostIds(html);
+      if (postIds.length > 0) {
+        break;
       }
+      await this.sleep(pollIntervalMs);
     }
-
-    const postIds = Array.from(extractedIds);
 
     if (postIds.length === 0) {
       throw new MonitoringError(
@@ -198,6 +188,40 @@ export class MonitoringAgent {
 
 
   // Utilities
+
+  /**
+   * Extract candidate post IDs from the raw HTML using multiple resilient patterns.
+   */
+  #extractPostIds(html: string): string[] {
+    // Facebook obfuscates the JSON/DOM, so we use multiple strategies to find post IDs.
+    // Common patterns include:
+    //  • "top_level_post_id":"12345"
+    //  • "post_id":"12345"
+    //  • "story_fbid":"12345"
+    //  • Permalink URLs such as https://www.facebook.com/<page>/posts/12345
+    const regexOptions = [
+      // JSON blobs (raw + HTML-encoded)
+      /"top_level_post_id":"(\d+)"/g,
+      /&quot;top_level_post_id&quot;:&quot;(\d+)&quot;/g,
+      /"post_id":"(\d+)"/g,
+      /&quot;post_id&quot;:&quot;(\d+)&quot;/g,
+      /"story_fbid":"(\d+)"/g,
+      /&quot;story_fbid&quot;:&quot;(\d+)&quot;/g,
+      // Permalink URLs (desktop / mobile / group variants all contain `/posts/<id>`)
+      /\/posts\/(\d{5,})/g,
+      /story_fbid=(\d{5,})/g,
+    ];
+
+    const extractedIds = new Set<string>();
+    for (const regex of regexOptions) {
+      let match: RegExpExecArray | null;
+      while ((match = regex.exec(html)) !== null) {
+        extractedIds.add(match[1]);
+      }
+    }
+
+    return Array.from(extractedIds);
+  }
 
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));

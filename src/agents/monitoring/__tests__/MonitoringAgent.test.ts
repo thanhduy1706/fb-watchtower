@@ -108,6 +108,38 @@ describe('MonitoringAgent', () => {
     await agent.shutdown();
   });
 
+  it('should extract IDs from story_fbid JSON blobs', async () => {
+    setupBrowserMocks();
+    mockPageContent.mockResolvedValue('{"story_fbid":"55555"}');
+
+    const agent = createAgent();
+    await agent.initialize();
+    const observation = await agent.observe();
+
+    expect(observation.latest_post_link).toBe(
+      'https://www.facebook.com/TestPage/posts/55555',
+    );
+
+    await agent.shutdown();
+  });
+
+  it('should extract IDs from permalink URLs', async () => {
+    setupBrowserMocks();
+    mockPageContent.mockResolvedValue(
+      '<a href="https://www.facebook.com/TestPage/posts/77777">Post</a>',
+    );
+
+    const agent = createAgent();
+    await agent.initialize();
+    const observation = await agent.observe();
+
+    expect(observation.latest_post_link).toBe(
+      'https://www.facebook.com/TestPage/posts/77777',
+    );
+
+    await agent.shutdown();
+  });
+
   // ─── Retry on Navigation Failure ────────────────
 
   it('should retry navigation and succeed after transient failure', async () => {
