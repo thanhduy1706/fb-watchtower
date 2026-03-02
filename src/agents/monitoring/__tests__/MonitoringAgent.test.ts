@@ -140,6 +140,23 @@ describe('MonitoringAgent', () => {
     await agent.shutdown();
   });
 
+  it('should support pfbid-style permalink IDs', async () => {
+    setupBrowserMocks();
+    mockPageContent.mockResolvedValue(
+      '<a href="https://www.facebook.com/TestPage/posts/pfbid0ABC123xyz">Post</a>',
+    );
+
+    const agent = createAgent();
+    await agent.initialize();
+    const observation = await agent.observe();
+
+    expect(observation.latest_post_link).toBe(
+      'https://www.facebook.com/TestPage/posts/pfbid0ABC123xyz',
+    );
+
+    await agent.shutdown();
+  });
+
   // ─── Retry on Navigation Failure ────────────────
 
   it('should retry navigation and succeed after transient failure', async () => {

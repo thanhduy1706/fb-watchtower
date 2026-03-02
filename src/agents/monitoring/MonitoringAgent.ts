@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import type { Browser, BrowserContext, Page } from 'playwright';
 import { chromium } from 'playwright-extra';
 import stealthPlugin from 'puppeteer-extra-plugin-stealth';
-import type { MonitoringAgentConfig, Observation, SelectorEntry } from '../../types/index.js';
+import type { MonitoringAgentConfig, Observation } from '../../types/index.js';
 import { DEFAULT_AGENT_CONFIG } from '../../config/index.js';
 import { MonitoringError, MonitoringErrorCode } from './errors.js';
 import { createLogger, type Logger } from '../../core/logger.js';
@@ -107,17 +107,22 @@ export class MonitoringAgent {
 
     while (Date.now() - startTime < maxWaitMs) {
       const html = await this.page.content();
-      postIds = this.#extractPostIds(html);
+      postIds = this.#extractPostIdsFromHtml(html);
       if (postIds.length > 0) {
         break;
       }
       await this.sleep(pollIntervalMs);
     }
 
+    // Fallback: attempt DOM-based extraction via configured selectors
+    if (postIds.length === 0) {
+      postIds = await this.#extractPostIdsFromDom();
+    }
+
     if (postIds.length === 0) {
       throw new MonitoringError(
         MonitoringErrorCode.EXTRACTION_FAILED,
-        'Could not locate any post IDs in the page source via JSON blobs.',
+        'Could not locate any post IDs in the page source via JSON blobs or DOM selectors.',
         { retryable: true },
       );
     }
@@ -192,24 +197,24 @@ export class MonitoringAgent {
   /**
    * Extract candidate post IDs from the raw HTML using multiple resilient patterns.
    */
-  #extractPostIds(html: string): string[] {
+  #extractPostIdsFromHtml(html: string): string[] {
     // Facebook obfuscates the JSON/DOM, so we use multiple strategies to find post IDs.
     // Common patterns include:
-    //  • "top_level_post_id":"12345"
+    //  • "top_level_post_id":"12345" or "top_level_post_id":"pfbid0..."
     //  • "post_id":"12345"
-    //  • "story_fbid":"12345"
-    //  • Permalink URLs such as https://www.facebook.com/<page>/posts/12345
+    //  • "story_fbid":"12345" or "story_fbid":"pfbid0..."
+    //  • Permalink URLs such as https://www.facebook.com/<page>/posts/12345 or /posts/pfbid0...
     const regexOptions = [
       // JSON blobs (raw + HTML-encoded)
-      /"top_level_post_id":"(\d+)"/g,
-      /&quot;top_level_post_id&quot;:&quot;(\d+)&quot;/g,
-      /"post_id":"(\d+)"/g,
-      /&quot;post_id&quot;:&quot;(\d+)&quot;/g,
-      /"story_fbid":"(\d+)"/g,
-      /&quot;story_fbid&quot;:&quot;(\d+)&quot;/g,
+      /"top_level_post_id":"([^"]+)"/g,
+      /&quot;top_level_post_id&quot;:&quot;([^"&]+)&quot;/g,
+      /"post_id":"([^"]+)"/g,
+      /&quot;post_id&quot;:&quot;([^"&]+)&quot;/g,
+      /"story_fbid":"([^"]+)"/g,
+      /&quot;story_fbid&quot;:&quot;([^"&]+)&quot;/g,
       // Permalink URLs (desktop / mobile / group variants all contain `/posts/<id>`)
-      /\/posts\/(\d{5,})/g,
-      /story_fbid=(\d{5,})/g,
+      /\/posts\/([^?"'\\\s]+)/g,
+      /story_fbid=([^&"'\\\s]+)/g,
     ];
 
     const extractedIds = new Set<string>();
@@ -221,6 +226,62 @@ export class MonitoringAgent {
     }
 
     return Array.from(extractedIds);
+  }
+
+  /**
+   * Best-effort DOM-based fallback using configured permalink selectors.
+   */
+  async #extractPostIdsFromDom(): Promise<string[]> {
+    if (!this.page) return [];
+
+    const ids = new Set<string>();
+    const permalinkSelectors = this.config.selectors.postPermalink.selectors;
+
+    for (const selector of permalinkSelectors) {
+      try {
+        const elements = await this.page.$$(selector);
+        for (const el of elements) {
+          const href = await el.getAttribute('href');
+          if (!href) continue;
+
+          // Normalize relative URLs against base pageUrl
+          let urlStr = href;
+          if (href.startsWith('/')) {
+            const base = new URL(this.config.pageUrl);
+            urlStr = `${base.origin}${href}`;
+          }
+
+          try {
+            const url = new URL(urlStr, this.config.pageUrl);
+
+            // 1) /posts/<id> pattern
+            const postsMatch = url.pathname.match(/\/posts\/([^/]+)/);
+            if (postsMatch?.[1]) {
+              ids.add(postsMatch[1]);
+              continue;
+            }
+
+            // 2) story_fbid=<id> query parameter
+            const storyId = url.searchParams.get('story_fbid');
+            if (storyId) {
+              ids.add(storyId);
+              continue;
+            }
+          } catch {
+            // Ignore malformed URLs and continue
+          }
+        }
+
+        if (ids.size > 0) {
+          break;
+        }
+      } catch {
+        // Selector may be invalid on this variant of the page; continue to next
+        continue;
+      }
+    }
+
+    return Array.from(ids);
   }
 
   private sleep(ms: number): Promise<void> {
