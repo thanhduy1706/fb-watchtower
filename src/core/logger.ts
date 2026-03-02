@@ -10,9 +10,31 @@ export interface Logger {
 // ── Shared Winston Instance ──────────────────────────────────────
 
 const customFormat = winston.format.printf(({ level, message, label, timestamp, ...meta }) => {
-  const lbl = label ? `[\x1b[36m${label}\x1b[0m] ` : '';
-  const objArgs = Object.keys(meta).length ? `\n${JSON.stringify(meta, null, 2)}` : '';
-  return `\x1b[90m${timestamp}\x1b[0m ${level}: ${lbl}${message}${objArgs}`;
+  const time = `\x1b[90m${timestamp}\x1b[0m`;
+
+  // Manual level coloring + icon for clearer scanning
+  let levelTag: string;
+  switch (level.toLowerCase()) {
+    case 'error':
+      levelTag = '\x1b[41m\x1b[37m ✖ ERROR \x1b[0m';
+      break;
+    case 'warn':
+      levelTag = '\x1b[43m\x1b[30m ⚠ WARN  \x1b[0m';
+      break;
+    case 'info':
+      levelTag = '\x1b[44m\x1b[37m ℹ INFO  \x1b[0m';
+      break;
+    case 'debug':
+    default:
+      levelTag = '\x1b[45m\x1b[37m 🐞 DEBUG \x1b[0m';
+      break;
+  }
+
+  const lbl = label ? `[\x1b[36m${label}\x1b[0m]` : '';
+  const metaObj = Object.keys(meta).length ? meta : null;
+  const metaLine = metaObj ? `\n\x1b[90m${JSON.stringify(metaObj, null, 2)}\x1b[0m` : '';
+
+  return `${time} ${levelTag} ${lbl} ${message}${metaLine}`.trimEnd();
 });
 
 export const systemLogger = winston.createLogger({

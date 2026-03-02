@@ -1,5 +1,10 @@
 import { Events, type EventBus } from '../core/eventBus.js';
 import { createLogger, type Logger } from '../core/logger.js';
+import type { Observation } from '../types/index.js';
+import type { MonitoringAgent } from './monitoring/MonitoringAgent.js';
+import type { ReasonerAgent } from './reasoner.js';
+import type { NotificationAgent } from './notification.js';
+import type { StateMemory } from './stateMemory.js';
 import { MonitoringError, MonitoringErrorCode } from './monitoring/errors.js';
 
 export interface CycleResult {
@@ -10,13 +15,20 @@ export interface CycleResult {
   error: string | null;
 }
 
+export interface OrchestratorAgents {
+  monitor: MonitoringAgent;
+  reasoner: ReasonerAgent;
+  notifier: NotificationAgent;
+  memory: StateMemory;
+}
+
 export class Orchestrator {
-  #agents: { monitor: any; reasoner: any; notifier: any; memory: any };
+  #agents: OrchestratorAgents;
   #eventBus: EventBus;
   #log: Logger;
   #isRunning = false;
   #started = false;
-  #activePromise: Promise<any> | null = null;
+  #activePromise: Promise<unknown> | null = null;
   #consecutiveExtractionFailures = 0;
   #pauseUntil: number | null = null;
 
@@ -25,11 +37,7 @@ export class Orchestrator {
   // Duration of degraded-mode backoff window in milliseconds.
   static readonly EXTRACTION_BACKOFF_WINDOW_MS = 5 * 60_000; // 5 minutes
 
-  constructor(
-    agents: { monitor: any; reasoner: any; notifier: any; memory: any },
-    eventBus: EventBus,
-    logger?: Logger,
-  ) {
+  constructor(agents: OrchestratorAgents, eventBus: EventBus, logger?: Logger) {
     this.#agents = agents;
     this.#eventBus = eventBus;
     this.#log = logger ?? createLogger('Orchestrator');
@@ -105,7 +113,7 @@ export class Orchestrator {
     try {
       // Step 1 — Observe
       this.#log.info('Step 1/4 — Observing…');
-      const observation = await this.#observeWithRetries();
+      const observation = (await this.#observeWithRetries()) as Observation;
 
       // Step 2 — Evaluate
       this.#log.info('Step 2/4 — Evaluating…');
@@ -123,8 +131,10 @@ export class Orchestrator {
       this.#log.info('Step 3/4 — Notifying…');
       try {
         await this.#agents.notifier.notify(decision);
-      } catch (notifyErr: any) {
-        this.#log.error('Notification failed (continuing to memory update):', notifyErr.message);
+      } catch (notifyErr) {
+        const message =
+          notifyErr instanceof Error ? notifyErr.message : (notifyErr as unknown as string);
+        this.#log.error('Notification failed (continuing to memory update):', message);
       }
 
       // Step 4 — Remember
@@ -135,8 +145,9 @@ export class Orchestrator {
       this.#emitComplete(result);
       this.#log.info(`Cycle complete — new post: ${decision.postLink}`);
       return result;
-    } catch (err: any) {
-      this.#log.error('Cycle failed:', err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : (err as unknown as string);
+      this.#log.error('Cycle failed:', message);
 
       // Track consecutive extraction failures to enter degraded backoff mode.
       if (err instanceof MonitoringError && err.code === MonitoringErrorCode.EXTRACTION_FAILED) {
@@ -154,7 +165,7 @@ export class Orchestrator {
         this.#consecutiveExtractionFailures = 0;
       }
 
-      const result = this.#buildResult(false, start, false, null, err.message);
+      const result = this.#buildResult(false, start, false, null, message);
       this.#emitComplete(result);
       return result;
     } finally {
@@ -170,7 +181,7 @@ export class Orchestrator {
     });
   };
 
-  async #observeWithRetries(): Promise<any> {
+  async #observeWithRetries(): Promise<Observation> {
     const maxAttempts = 3;
     let lastError: unknown;
 

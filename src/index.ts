@@ -1,7 +1,7 @@
 import { EventBus } from './core/eventBus.js';
 import { loadConfig, type AppConfig } from './core/config.js';
 import { createLogger } from './core/logger.js';
-import { Orchestrator } from './agents/orchestrator.js';
+import { Orchestrator, type OrchestratorAgents } from './agents/orchestrator.js';
 import { SchedulerAgent } from './agents/scheduler/index.js';
 import { MonitoringAgent } from './agents/monitoring/index.js';
 import { NotificationAgent } from './agents/notification.js';
@@ -32,7 +32,8 @@ async function main() {
     pollingIntervalMs: config.checkIntervalMs,
   });
 
-  const orchestrator = new Orchestrator({ monitor, reasoner, notifier, memory }, eventBus);
+  const agents: OrchestratorAgents = { monitor, reasoner, notifier, memory };
+  const orchestrator = new Orchestrator(agents, eventBus);
 
   orchestrator.start();
   scheduler.start();
