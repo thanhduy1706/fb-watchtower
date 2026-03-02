@@ -1,6 +1,6 @@
 import { Events, type EventBus } from '../core/eventBus.js';
 import { createLogger, type Logger } from '../core/logger.js';
-import { MonitoringError } from './monitoring/errors.js';
+import { MonitoringError, MonitoringErrorCode } from './monitoring/errors.js';
 
 export interface CycleResult {
   success: boolean;
@@ -17,6 +17,13 @@ export class Orchestrator {
   #isRunning = false;
   #started = false;
   #activePromise: Promise<any> | null = null;
+  #consecutiveExtractionFailures = 0;
+  #pauseUntil: number | null = null;
+
+  // After this many consecutive EXTRACTION_FAILED cycles, enter degraded mode.
+  static readonly MAX_EXTRACTION_FAILURES_BEFORE_PAUSE = 5;
+  // Duration of degraded-mode backoff window in milliseconds.
+  static readonly EXTRACTION_BACKOFF_WINDOW_MS = 5 * 60_000; // 5 minutes
 
   constructor(
     agents: { monitor: any; reasoner: any; notifier: any; memory: any },
@@ -69,6 +76,29 @@ export class Orchestrator {
       };
     }
 
+    const now = Date.now();
+
+    // Clear degraded mode if backoff window has elapsed
+    if (this.#pauseUntil !== null && now >= this.#pauseUntil) {
+      this.#log.info('Extraction backoff window elapsed — resuming normal operation');
+      this.#pauseUntil = null;
+      this.#consecutiveExtractionFailures = 0;
+    }
+
+    // If we're still within the backoff window, skip this cycle early
+    if (this.#pauseUntil !== null && now < this.#pauseUntil) {
+      this.#log.warn(
+        'Monitoring is in degraded backoff mode — skipping cycle until extraction stabilizes.',
+      );
+      return {
+        success: false,
+        duration: 0,
+        changeDetected: false,
+        postLink: null,
+        error: 'Monitoring in backoff due to repeated extraction failures',
+      };
+    }
+
     this.#isRunning = true;
     const start = Date.now();
 
@@ -107,6 +137,23 @@ export class Orchestrator {
       return result;
     } catch (err: any) {
       this.#log.error('Cycle failed:', err.message);
+
+      // Track consecutive extraction failures to enter degraded backoff mode.
+      if (err instanceof MonitoringError && err.code === MonitoringErrorCode.EXTRACTION_FAILED) {
+        this.#consecutiveExtractionFailures += 1;
+
+        if (this.#consecutiveExtractionFailures >= Orchestrator.MAX_EXTRACTION_FAILURES_BEFORE_PAUSE) {
+          this.#pauseUntil = Date.now() + Orchestrator.EXTRACTION_BACKOFF_WINDOW_MS;
+          this.#log.warn(
+            `Entering extraction backoff mode after ${this.#consecutiveExtractionFailures} consecutive EXTRACTION_FAILED cycles. ` +
+              `Will pause new cycles for ${Orchestrator.EXTRACTION_BACKOFF_WINDOW_MS / 60_000} minutes.`,
+          );
+        }
+      } else {
+        // Reset counter for non-extraction-related errors
+        this.#consecutiveExtractionFailures = 0;
+      }
+
       const result = this.#buildResult(false, start, false, null, err.message);
       this.#emitComplete(result);
       return result;
