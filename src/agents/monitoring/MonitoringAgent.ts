@@ -127,16 +127,16 @@ export class MonitoringAgent {
       );
     }
 
-    // Assuming the first ID found is the most recent or pinned post
-    const latestPostId = postIds[0];
-
-    // Normalize absolute URL
-    const baseUrl = this.config.pageUrl.endsWith('/') ? this.config.pageUrl.slice(0, -1) : this.config.pageUrl;
-    const permalink = `${baseUrl}/posts/${latestPostId}`;
+    // Build ordered list of candidate permalinks (most prominent first)
+    const baseUrl = this.config.pageUrl.endsWith('/')
+      ? this.config.pageUrl.slice(0, -1)
+      : this.config.pageUrl;
+    const candidateLinks = postIds.map((id) => `${baseUrl}/posts/${id}`);
+    const permalink = candidateLinks[0];
 
     // Step 4: Extract content preview (best effort)
     // Attempting to extract text from the DOM is brittle; fallback to a generic message
-    const contentPreview = `[Extracted post ID: ${latestPostId} via JSON blob] Check the link for full content.`;
+    const contentPreview = `[Extracted post ID: ${postIds[0]} via JSON blob] Check the link for full content.`;
 
     // Step 5: Compute DOM hash
     // Hashing the list of post IDs provides an extremely stable change detector for the feed!
@@ -145,6 +145,7 @@ export class MonitoringAgent {
 
     const observation: Observation = {
       latest_post_link: permalink,
+      candidate_post_links: candidateLinks,
       extracted_at: new Date().toISOString(),
       content_preview: contentPreview,
       raw_dom_hash: rawDomHash,

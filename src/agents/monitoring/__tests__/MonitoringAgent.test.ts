@@ -85,11 +85,12 @@ describe('MonitoringAgent', () => {
     await agent.initialize();
     const observation = await agent.observe();
 
-    expect(observation).toEqual({
+    expect(observation).toMatchObject({
       latest_post_link: 'https://www.facebook.com/TestPage/posts/12345',
       extracted_at: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
       content_preview: expect.stringContaining('12345'),
       raw_dom_hash: expect.any(String),
+      candidate_post_links: ['https://www.facebook.com/TestPage/posts/12345'],
     });
 
     await agent.shutdown();

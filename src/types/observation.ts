@@ -4,6 +4,12 @@
 export interface Observation {
   /** Permalink URL to the latest post */
   latest_post_link: string;
+  /**
+   * Ordered list of candidate post permalinks observed on the page
+   * (most prominent / newest-first). Includes latest_post_link as
+   * the first element when present.
+   */
+  candidate_post_links?: string[];
   /** ISO 8601 timestamp of when the extraction occurred */
   extracted_at: string;
   /** Truncated text content preview of the post (max 280 chars) */
