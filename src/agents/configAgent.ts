@@ -1,42 +1,82 @@
-import { MonitoringAgent } from './monitoring/index.js';
-import { Logger } from '../utils/logger.js';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as dotenv from 'dotenv';
 
-const logger = new Logger('Main', 'INFO');
+export const SCHEMA: Record<string, { required: boolean; default?: string }> = {
+  facebookPageUrl: { required: true },
+  slackWebhookUrl: { required: false, default: '' },
+  checkIntervalMs: { required: false, default: '300000' },
+  timezone: { required: false, default: 'Asia/Ho_Chi_Minh' },
+  dbHost: { required: false, default: 'localhost' },
+  dbPort: { required: false, default: '5432' },
+  dbUser: { required: false, default: 'postgres' },
+  dbPass: { required: false, default: '' },
+  dbName: { required: false, default: 'watchtower' },
+  scheduleStart: { required: false, default: '07:00' },
+  scheduleEnd: { required: false, default: '22:00' },
+};
 
-async function main(): Promise<void> {
-  const pageUrl = process.env.FB_PAGE_URL;
-  if (!pageUrl) {
-    logger.error('FB_PAGE_URL environment variable is required.');
-    process.exit(1);
+// Map of env var names to schema keys
+const ENV_MAP: Record<string, string> = {
+  FB_PAGE_URL: 'facebookPageUrl',
+  SLACK_WEBHOOK_URL: 'slackWebhookUrl',
+  CHECK_INTERVAL_MS: 'checkIntervalMs',
+  TZ: 'timezone',
+  DB_HOST: 'dbHost',
+  DB_PORT: 'dbPort',
+  DB_USER: 'dbUser',
+  DB_PASS: 'dbPass',
+  DB_NAME: 'dbName',
+  SCHEDULE_START: 'scheduleStart',
+  SCHEDULE_END: 'scheduleEnd',
+};
+
+export class ConfigAgent {
+  private readonly envPath: string;
+  private values: Map<string, string> = new Map();
+
+  constructor(envFile: string = '.env') {
+    this.envPath = path.resolve(process.cwd(), envFile);
   }
 
-  logger.info(`Starting Monitoring Agent for: ${pageUrl}`);
+  load(): void {
+    // Load .env file if it exists
+    if (fs.existsSync(this.envPath)) {
+      const parsed = dotenv.parse(fs.readFileSync(this.envPath));
+      for (const [envKey, schemaKey] of Object.entries(ENV_MAP)) {
+        if (parsed[envKey] !== undefined) {
+          this.values.set(schemaKey, parsed[envKey]);
+        }
+      }
+    }
 
-  const agent = new MonitoringAgent({ pageUrl });
+    // Override with process.env (already loaded by dotenv/config)
+    for (const [envKey, schemaKey] of Object.entries(ENV_MAP)) {
+      if (process.env[envKey] !== undefined) {
+        this.values.set(schemaKey, process.env[envKey] as string);
+      }
+    }
 
-  // Graceful shutdown
-  const shutdown = async () => {
-    logger.info('Received shutdown signal. Cleaning up...');
-    await agent.shutdown();
-    process.exit(0);
-  };
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
+    // Apply defaults for missing keys
+    for (const [key, spec] of Object.entries(SCHEMA)) {
+      if (!this.values.has(key) && spec.default !== undefined) {
+        this.values.set(key, spec.default);
+      }
+    }
 
-  try {
-    await agent.initialize();
-    const observation = await agent.observe();
-    console.log('\n=== Observation Result ===');
-    console.log(JSON.stringify(observation, null, 2));
-  } catch (err) {
-    logger.error('Observation failed.', {
-      message: (err as Error).message,
-      name: (err as Error).name,
-    });
-    process.exitCode = 1;
-  } finally {
-    await agent.shutdown();
+    // Validate required fields
+    for (const [key, spec] of Object.entries(SCHEMA)) {
+      if (spec.required && !this.values.get(key)) {
+        throw new Error(`Missing required configuration: ${key} (set via environment variable)`);
+      }
+    }
+  }
+
+  get(key: string): string {
+    const value = this.values.get(key);
+    if (value === undefined) {
+      throw new Error(`Config key not found: ${key}. Did you call load()?`);
+    }
+    return value;
   }
 }
-
-main();
