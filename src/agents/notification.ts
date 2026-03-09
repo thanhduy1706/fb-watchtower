@@ -33,10 +33,6 @@ export class NotificationAgent {
 
   // ── Public API ──────────────────────────────────────────────────
 
-  /**
-   * Format a Slack Block Kit payload from the decision object and send it
-   * via the configured webhook URL.
-   */
   async notify(decision: Decision): Promise<DeliveryResult> {
     const payload = this.#buildPayload(decision);
 
@@ -173,7 +169,6 @@ export class NotificationAgent {
     return { success, statusCode, attempts, error };
   }
 
-  /** Safely read the response body for error logging. */
   async #safeReadBody(response: Response): Promise<string> {
     try {
       return await response.text();
@@ -182,7 +177,6 @@ export class NotificationAgent {
     }
   }
 
-  /** Promise-based sleep. */
   #sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }

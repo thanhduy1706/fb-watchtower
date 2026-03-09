@@ -7,12 +7,9 @@ export interface Logger {
   debug(...args: any[]): void;
 }
 
-// ── Shared Winston Instance ──────────────────────────────────────
-
 const customFormat = winston.format.printf(({ level, message, label, timestamp, ...meta }) => {
   const time = `\x1b[90m${timestamp}\x1b[0m`;
 
-  // Manual level coloring + icon for clearer scanning
   let levelTag: string;
   switch (level.toLowerCase()) {
     case 'error':
@@ -50,10 +47,6 @@ export const systemLogger = winston.createLogger({
   ],
 });
 
-/**
- * Lightweight structured logger wrapper.
- * Each agent receives a child logger prefixed with its context label.
- */
 export function createLogger(name: string): Logger {
   const child = systemLogger.child({ label: name });
 

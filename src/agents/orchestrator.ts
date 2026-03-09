@@ -67,10 +67,6 @@ export class Orchestrator {
   }
 
   // Pipeline
-
-  /**
-   * Execute one full observe → evaluate → notify → remember cycle.
-   */
   async runCycle(): Promise<CycleResult> {
     // Concurrency guard
     if (this.#isRunning) {

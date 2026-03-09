@@ -11,15 +11,6 @@ import type { CookieInput } from './types/index.js';
 
 const log = createLogger('Main');
 
-/**
- * Parse and normalise Facebook session cookies from the FACEBOOK_COOKIES env var.
- *
- * The env var accepts the JSON array produced by the "Cookie-Editor" browser
- * extension, which uses slightly different field names than Playwright:
- *   - `expirationDate` (float UNIX epoch) → `expires` (int UNIX epoch)
- *   - `sameSite: "no_restriction"` → `sameSite: "None"`
- *   - Extra fields (`hostOnly`, `storeId`, `session`) are stripped.
- */
 function parseFacebookCookies(): CookieInput[] {
   const raw = process.env.FACEBOOK_COOKIES;
   if (!raw || raw.trim() === '') {

@@ -3,12 +3,7 @@ import { Logger } from './utils/logger.js';
 
 const logger = new Logger('Main', 'INFO');
 
-/**
- * CLI entry point for standalone testing of the Monitoring Agent.
- *
- * Usage:
- *   FB_PAGE_URL="https://www.facebook.com/NASA" npx tsx src/main.ts
- */
+
 async function main(): Promise<void> {
   const pageUrl = process.env.FB_PAGE_URL;
   if (!pageUrl) {

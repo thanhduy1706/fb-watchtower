@@ -3,12 +3,6 @@ import type { Observation } from '../types/index.js';
 import type { Decision } from './notification.js';
 import type { StateMemory } from './stateMemory.js';
 
-/**
- * Reasoner (Decision) Agent
- *
- * Compares the latest observed post link against the stored state.
- * Returns a Decision that drives whether a Slack notification is sent.
- */
 export class ReasonerAgent {
   #memory: StateMemory;
   #log: Logger;
@@ -18,13 +12,6 @@ export class ReasonerAgent {
     this.#log = logger ?? createLogger('Reasoner');
   }
 
-  /**
-   * Evaluate an observation against the persisted state.
-   *
-   * - Fetches the last seen post link from the database.
-   * - Compares it to the newly observed post link.
-   * - Returns changeDetected=true if the post is new.
-   */
   async evaluate(observation: Observation): Promise<Decision> {
     const { latest_post_link, candidate_post_links, content_preview } = observation;
 
@@ -68,10 +55,7 @@ export class ReasonerAgent {
     return { changeDetected: true, postLink: selectedLink, contentPreview: content_preview };
   }
 
-  /**
-   * Strip dynamic Facebook query parameters (e.g., __cft__, __tn__)
-   * which change on every scrape, to ensure stable equality checks.
-   */
+
   #normalizeUrl(url: string): string {
     try {
       const parsed = new URL(url);

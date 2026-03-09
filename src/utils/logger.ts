@@ -7,9 +7,6 @@ const LEVEL_PRIORITY: Record<LogLevel, number> = {
   ERROR: 3,
 };
 
-/**
- * Simple structured console logger with timestamps and log levels.
- */
 export class Logger {
   private context: string;
   private minLevel: LogLevel;
