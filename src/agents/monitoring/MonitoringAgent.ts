@@ -196,16 +196,10 @@ export class MonitoringAgent {
       try {
         this.logger.info(`Navigation attempt ${attempt}/${this.config.maxRetries}...`);
         await this.page!.goto(this.config.pageUrl, {
-          // 'networkidle' waits until no network requests for 500 ms — ensures
-          // lazy-loaded JS bundles (including embedded JSON relay payloads) have
-          // finished loading before we try to parse the HTML.
-          waitUntil: 'networkidle',
+          waitUntil: 'domcontentloaded',
           timeout: this.config.navigationTimeoutMs,
         });
         this.logger.info('Navigation succeeded.');
-
-        // Give React/Relay time to hydrate and inject embedded JSON blobs.
-        await this.sleep(2_000);
 
         // Detect login wall (Facebook redirects unauthenticated browsers to /login).
         const currentUrl = this.page!.url();
