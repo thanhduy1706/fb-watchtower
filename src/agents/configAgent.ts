@@ -1,5 +1,5 @@
-import { MonitoringAgent } from './agents/monitoring/index.js';
-import { Logger } from './utils/logger.js';
+import { MonitoringAgent } from './monitoring/index.js';
+import { Logger } from '../utils/logger.js';
 
 const logger = new Logger('Main', 'INFO');
 
