@@ -18,15 +18,15 @@ export const SCHEMA: Record<string, { required: boolean; default?: string }> = {
 
 // Map of env var names to schema keys
 const ENV_MAP: Record<string, string> = {
-  FB_PAGE_URL: 'facebookPageUrl',
+  FACEBOOK_PAGE_URL: 'facebookPageUrl',
   SLACK_WEBHOOK_URL: 'slackWebhookUrl',
   CHECK_INTERVAL_MS: 'checkIntervalMs',
-  TZ: 'timezone',
-  DB_HOST: 'dbHost',
-  DB_PORT: 'dbPort',
-  DB_USER: 'dbUser',
-  DB_PASS: 'dbPass',
-  DB_NAME: 'dbName',
+  TIMEZONE: 'timezone',
+  DATABASE_HOST: 'dbHost',
+  DATABASE_PORT: 'dbPort',
+  DATABASE_USERNAME: 'dbUser',
+  DATABASE_PASSWORD: 'dbPass',
+  DATABASE_NAME: 'dbName',
   SCHEDULE_START: 'scheduleStart',
   SCHEDULE_END: 'scheduleEnd',
 };
