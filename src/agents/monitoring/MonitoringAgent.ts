@@ -10,6 +10,13 @@ import { createLogger, type Logger } from '../../core/logger.js';
 // Apply stealth plugin globally to playwright-extra
 chromium.use(stealthPlugin());
 
+// Validation patterns for extracted post IDs.
+// Facebook post IDs are either:
+//  • Pure numeric strings that are at least 10 digits (e.g. "1234567890")
+//  • pfbid-prefixed base64-ish tokens (e.g. "pfbid02wjzLQ...")
+const numericIdPattern = /^[0-9]{10,}$/;
+const pfbIdPattern = /^pfbid[A-Za-z0-9_-]{5,}$/;
+
 /**
  * Monitoring (Perception) Agent
  *
@@ -189,10 +196,30 @@ export class MonitoringAgent {
       try {
         this.logger.info(`Navigation attempt ${attempt}/${this.config.maxRetries}...`);
         await this.page!.goto(this.config.pageUrl, {
-          waitUntil: 'domcontentloaded',
+          // 'networkidle' waits until no network requests for 500 ms — ensures
+          // lazy-loaded JS bundles (including embedded JSON relay payloads) have
+          // finished loading before we try to parse the HTML.
+          waitUntil: 'networkidle',
           timeout: this.config.navigationTimeoutMs,
         });
         this.logger.info('Navigation succeeded.');
+
+        // Give React/Relay time to hydrate and inject embedded JSON blobs.
+        await this.sleep(2_000);
+
+        // Detect login wall (Facebook redirects unauthenticated browsers to /login).
+        const currentUrl = this.page!.url();
+        if (
+          currentUrl.includes('/login') ||
+          currentUrl.includes('login.php') ||
+          currentUrl.includes('checkpoint')
+        ) {
+          this.logger.warn(
+            `Login wall detected — redirected to: ${currentUrl}. ` +
+            'Post extraction will likely fail. Consider using authenticated cookies.',
+          );
+        }
+
         return;
       } catch (err) {
         lastError = err as Error;
@@ -222,29 +249,75 @@ export class MonitoringAgent {
    */
   #extractPostIdsFromHtml(html: string): string[] {
     // Facebook obfuscates the JSON/DOM, so we use multiple strategies to find post IDs.
-    // Common patterns include:
-    //  • "top_level_post_id":"12345" or "top_level_post_id":"pfbid0..."
-    //  • "post_id":"12345"
-    //  • "story_fbid":"12345" or "story_fbid":"pfbid0..."
-    //  • Permalink URLs such as https://www.facebook.com/<page>/posts/12345 or /posts/pfbid0...
+    //
+    // Patterns targeted:
+    //  • Classic JSON keys: "top_level_post_id", "post_id", "story_fbid"
+    //  • React/Relay __bbox payloads that embed the same keys inside escaped JSON strings
+    //  • "node_id", "unified_story" relay patterns used on newer page layouts
+    //  • Permalink URL patterns: /posts/<id>, story_fbid=<id>, /permalink/<id>
+    //  • HTML-entity encoded variants of all the above (&quot; instead of ")
+    //
+    // Both the raw HTML and the HTML-entity-decoded version are scanned to
+    // handle inline JSON blobs that go through an extra encoding pass.
     const regexOptions = [
-      // JSON blobs (raw + HTML-encoded)
+      // ── Classic JSON key patterns ──────────────────────────────────────────
       /"top_level_post_id":"([^"]+)"/g,
-      /&quot;top_level_post_id&quot;:&quot;([^"&]+)&quot;/g,
       /"post_id":"([^"]+)"/g,
-      /&quot;post_id&quot;:&quot;([^"&]+)&quot;/g,
       /"story_fbid":"([^"]+)"/g,
-      /&quot;story_fbid&quot;:&quot;([^"&]+)&quot;/g,
-      // Permalink URLs (desktop / mobile / group variants all contain `/posts/<id>`)
-      /\/posts\/([^?"'\\\s]+)/g,
+
+      // ── Newer Relay / __bbox patterns ─────────────────────────────────────
+      // e.g. {"__bbox":{"result":{"data":{"node":{"id":"..."}}}}
+      /"node_id":"([0-9]{10,})"/g,
+      /"unified_story_id":"([^"]+)"/g,
+      /"bbId":"([^"]+)"/g,
+      // CometFeedStory relay: "fluxstore_key":"pfbid0..."
+      /"fluxstore_key":"(pfbid[A-Za-z0-9_-]+)"/g,
+      // Generic large numeric IDs embedded near "post" key context
+      /"post":\{"id":"([0-9]{10,})"/g,
+      /"post_id":([0-9]{10,})/g,
+      // story_id used in some newer mobile layouts
+      /"story_id":"([^"]+)"/g,
+      // ── Permalink URL patterns ─────────────────────────────────────────────
+      /\/posts\/(pfbid[A-Za-z0-9_-]+)/g,
+      /\/posts\/([0-9]{10,})/g,
       /story_fbid=([^&"'\\\s]+)/g,
+      /\/permalink\/([0-9]{10,})/g,
+      // ── HTML-entity-encoded variants ──────────────────────────────────────
+      /&quot;top_level_post_id&quot;:&quot;([^"&]+)&quot;/g,
+      /&quot;post_id&quot;:&quot;([^"&]+)&quot;/g,
+      /&quot;story_fbid&quot;:&quot;([^"&]+)&quot;/g,
+      /&quot;story_id&quot;:&quot;([^"&]+)&quot;/g,
     ];
 
     const extractedIds = new Set<string>();
+
+    // Scan raw HTML
     for (const regex of regexOptions) {
       let match: RegExpExecArray | null;
       while ((match = regex.exec(html)) !== null) {
-        extractedIds.add(match[1]);
+        const id = match[1];
+        // Basic sanity: must be non-empty and either numeric or a pfbid token
+        if (id && (pfbIdPattern.test(id) || numericIdPattern.test(id))) {
+          extractedIds.add(id);
+        }
+      }
+    }
+
+    // Also scan HTML-entity decoded version to catch doubly-encoded blobs
+    if (extractedIds.size === 0) {
+      const decoded = html
+        .replaceAll('&quot;', '"')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&#34;', '"');
+      for (const regex of regexOptions) {
+        regex.lastIndex = 0; // reset stateful regex
+        let match: RegExpExecArray | null;
+        while ((match = regex.exec(decoded)) !== null) {
+          const id = match[1];
+          if (id && (pfbIdPattern.test(id) || numericIdPattern.test(id))) {
+            extractedIds.add(id);
+          }
+        }
       }
     }
 
