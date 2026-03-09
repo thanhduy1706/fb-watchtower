@@ -49,6 +49,15 @@ export class MonitoringAgent {
         locale: 'en-US',
         timezoneId: 'America/New_York',
       });
+
+      // Inject authenticated session cookies when provided
+      if (this.config.cookies && this.config.cookies.length > 0) {
+        await this.context.addCookies(this.config.cookies);
+        this.logger.info(`Injected ${this.config.cookies.length} session cookie(s).`);
+      } else {
+        this.logger.warn('No session cookies configured — unauthenticated pages may hit a login wall.');
+      }
+
       this.page = await this.context.newPage();
       this.logger.info('Browser initialized successfully.');
     } catch (err) {
@@ -98,6 +107,19 @@ export class MonitoringAgent {
 
     // Step 1: Navigate with retries
     await this.navigateWithRetry();
+
+    // Guard: fast-fail if we ended up on the login wall
+    const currentUrl = this.page.url();
+    if (currentUrl.includes('/login')) {
+      this.logger.warn(
+        `Login wall detected — redirected to: ${currentUrl}. Post extraction will likely fail. Consider using authenticated cookies.`,
+      );
+      throw new MonitoringError(
+        MonitoringErrorCode.EXTRACTION_FAILED,
+        'Redirected to Facebook login wall. Provide valid session cookies via FACEBOOK_COOKIES env var.',
+        { retryable: false },
+      );
+    }
 
     // Step 2 & 3: Poll the DOM for post IDs with early exit
     const maxWaitMs = this.config.selectorTimeoutMs;

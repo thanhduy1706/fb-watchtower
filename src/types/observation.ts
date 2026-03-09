@@ -43,6 +43,21 @@ export interface SelectorConfig {
 }
 
 /**
+ * A single browser cookie to inject into the monitoring session.
+ * Matches Playwright's AddCookie shape.
+ */
+export interface CookieInput {
+  name: string;
+  value: string;
+  domain: string;
+  path: string;
+  expires?: number;
+  httpOnly?: boolean;
+  secure?: boolean;
+  sameSite?: 'Strict' | 'Lax' | 'None';
+}
+
+/**
  * Configuration for the Monitoring Agent runtime behaviour.
  */
 export interface MonitoringAgentConfig {
@@ -62,4 +77,9 @@ export interface MonitoringAgentConfig {
   userAgent: string;
   /** Viewport dimensions */
   viewport: { width: number; height: number };
+  /**
+   * Optional authenticated session cookies to inject into the browser context.
+   * Required for pages behind a login wall (e.g. Facebook).
+   */
+  cookies?: CookieInput[];
 }
