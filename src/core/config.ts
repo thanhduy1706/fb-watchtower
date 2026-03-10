@@ -22,11 +22,11 @@ export function loadConfig(): AppConfig {
   return Object.freeze({
     facebookPageUrl: agent.get('facebookPageUrl'),
     slackWebhookUrl: agent.get('slackWebhookUrl'),
-    checkIntervalMs: agent.get('checkIntervalMs'),
+    checkIntervalMs: Number(agent.get('checkIntervalMs')),
     timezone: agent.get('timezone'),
 
     dbHost: agent.get('dbHost'),
-    dbPort: agent.get('dbPort'),
+    dbPort: Number(agent.get('dbPort')),
     dbUser: agent.get('dbUser'),
     dbPass: agent.get('dbPass'),
     dbName: agent.get('dbName'),

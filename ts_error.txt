@@ -1,0 +1,5 @@
+src/agents/monitoring/MonitoringAgent.ts(328,44): error TS2339: Property 'selectors' does not exist on type 'MonitoringAgentConfig'.
+src/config/agent.ts(10,3): error TS2353: Object literal may only specify known properties, and 'selectors' does not exist in type 'MonitoringAgentConfig'.
+src/core/config.ts(22,3): error TS2322: Type 'Readonly<{ facebookPageUrl: string; slackWebhookUrl: string; checkIntervalMs: string; timezone: string; dbHost: string; dbPort: string; dbUser: string; dbPass: string; dbName: string; scheduleStart: number; scheduleEnd: number; }>' is not assignable to type 'AppConfig'.
+  Types of property 'checkIntervalMs' are incompatible.
+    Type 'string' is not assignable to type 'number'.

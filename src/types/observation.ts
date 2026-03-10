@@ -38,4 +38,5 @@ export interface MonitoringAgentConfig {
   userAgent: string;
   viewport: { width: number; height: number };
   cookies?: CookieInput[];
+  selectors: SelectorConfig;
 }

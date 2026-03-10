@@ -47,6 +47,14 @@ yarn install
 
 ### Usage
 
+If you encounter login wall issues or need to refresh Facebook session cookies, the system supports interactive authentication:
+
+```bash
+# Obtain fresh Facebook cookies interactively and save to .env
+npm run auth
+```
+
+Start the primary orchestrator loop:
 ```bash
 # Start the system
 npm run start
