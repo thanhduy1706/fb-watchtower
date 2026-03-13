@@ -94,7 +94,7 @@ async function main() {
   process.on('SIGTERM', () => shutdown('SIGTERM'));
 }
 
-main().catch((err: any) => {
+main().catch((err: unknown) => {
   log.error('Fatal:', err);
   process.exit(1);
 });

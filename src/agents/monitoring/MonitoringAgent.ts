@@ -55,9 +55,13 @@ export class MonitoringAgent {
       this.page = await this.context.newPage();
       this.logger.info('Browser initialized successfully.');
     } catch (err) {
+      let message = `Failed to launch browser: ${(err as Error).message}`;
+      if (message.includes("Executable doesn't exist") || message.includes("playwright install")) {
+        message += "\n\n💡 INSTRUCTION TO FIX: Run 'npx playwright install chromium' to download the required browser binaries.";
+      }
       throw new MonitoringError(
         MonitoringErrorCode.BROWSER_LAUNCH_FAILED,
-        `Failed to launch browser: ${(err as Error).message}`,
+        message,
         { retryable: false, cause: err as Error },
       );
     }
@@ -69,8 +73,8 @@ export class MonitoringAgent {
     try {
       await this.context?.close();
       await this.browser?.close();
-    } catch {
-      
+    } catch (err) {
+      this.logger.debug(`Error during browser shutdown: ${(err as Error).message}`);
     }
     this.browser = null;
     this.context = null;

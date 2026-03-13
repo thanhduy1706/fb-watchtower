@@ -1,10 +1,10 @@
 import winston from 'winston';
 
 export interface Logger {
-  info(...args: any[]): void;
-  warn(...args: any[]): void;
-  error(...args: any[]): void;
-  debug(...args: any[]): void;
+  info(...args: unknown[]): void;
+  warn(...args: unknown[]): void;
+  error(...args: unknown[]): void;
+  debug(...args: unknown[]): void;
 }
 
 const customFormat = winston.format.printf(({ level, message, label, timestamp, ...meta }) => {
@@ -51,17 +51,17 @@ export function createLogger(name: string): Logger {
   const child = systemLogger.child({ label: name });
 
   return {
-    info: (...args: any[]) => child.info(formatArgs(args)),
-    warn: (...args: any[]) => child.warn(formatArgs(args)),
-    error: (...args: any[]) => child.error(formatArgs(args)),
-    debug: (...args: any[]) => child.debug(formatArgs(args)),
+    info: (...args: unknown[]) => child.info(formatArgs(args)),
+    warn: (...args: unknown[]) => child.warn(formatArgs(args)),
+    error: (...args: unknown[]) => child.error(formatArgs(args)),
+    debug: (...args: unknown[]) => child.debug(formatArgs(args)),
   };
 }
 
 
 
 
-function formatArgs(args: any[]): string {
+function formatArgs(args: unknown[]): string {
   return args
     .map((arg) => {
       if (errToJSON && arg instanceof Error) {

@@ -138,7 +138,8 @@ export class ResilienceAgent {
       try {
         this.onRecover(subsystem, error);
       } catch {
-        
+        // Recovery callback failed; we swallow this as the ResilienceAgent 
+        // should never crash the main loop it is trying to protect.
       }
     }
 
@@ -152,7 +153,7 @@ export class ResilienceAgent {
       try {
         this.onAlert(message);
       } catch {
-        
+        // Alert callback failed; silence it to prevent recursion or crashes.
       }
     }
   }

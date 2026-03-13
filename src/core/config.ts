@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { ConfigAgent, SCHEMA } from '../agents/configAgent.js';
+import { ConfigAgent } from '../agents/configAgent.js';
 
 export interface AppConfig {
   facebookPageUrl: string;

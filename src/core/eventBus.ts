@@ -13,7 +13,7 @@ export class EventBus extends EventEmitter {
   }
 
   
-  emit(event: string | symbol, ...args: any[]): boolean {
+  emit(event: string | symbol, ...args: unknown[]): boolean {
     const listeners = this.listeners(event);
 
     for (const listener of listeners) {

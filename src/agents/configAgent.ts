@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
+import { EventEmitter } from 'node:events';
 
 export const SCHEMA: Record<string, { required: boolean; default?: string }> = {
   facebookPageUrl: { required: true },
@@ -31,11 +32,13 @@ const ENV_MAP: Record<string, string> = {
   SCHEDULE_END: 'scheduleEnd',
 };
 
-export class ConfigAgent {
+export class ConfigAgent extends EventEmitter {
   private readonly envPath: string;
   private values: Map<string, string> = new Map();
+  private watcher: fs.FSWatcher | null = null;
 
   constructor(envFile: string = '.env') {
+    super();
     this.envPath = path.resolve(process.cwd(), envFile);
   }
 
@@ -78,5 +81,29 @@ export class ConfigAgent {
       throw new Error(`Config key not found: ${key}. Did you call load()?`);
     }
     return value;
+  }
+
+  getAll(): Record<string, string> {
+    return Object.freeze(Object.fromEntries(this.values));
+  }
+
+  enableHotReload(): void {
+    if (this.watcher) return;
+
+    this.watcher = fs.watch(this.envPath, (eventType) => {
+      if (eventType === 'change') {
+        const oldValues = this.getAll();
+        this.load();
+        const newValues = this.getAll();
+        this.emit('config:updated', newValues, oldValues);
+      }
+    });
+  }
+
+  stopHotReload(): void {
+    if (this.watcher) {
+      this.watcher.close();
+      this.watcher = null;
+    }
   }
 }

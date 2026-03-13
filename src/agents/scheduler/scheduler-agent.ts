@@ -117,9 +117,9 @@ export class SchedulerAgent {
 
       
       if (shouldRun) {
-        this.eventBus.emit(Events.SCHEDULER_RUN as any);
+        this.eventBus.emit(Events.SCHEDULER_RUN);
       } else {
-        this.eventBus.emit(Events.SCHEDULER_PAUSE as any);
+        this.eventBus.emit(Events.SCHEDULER_PAUSE);
       }
     } catch (err) {
       this.handleTickError(err);
@@ -143,7 +143,7 @@ export class SchedulerAgent {
       this.recordTransition('PAUSE', `Error: ${message}`);
     }
 
-    this.eventBus.emit(Events.SCHEDULER_PAUSE as any);
+    this.eventBus.emit(Events.SCHEDULER_PAUSE);
   }
 
   

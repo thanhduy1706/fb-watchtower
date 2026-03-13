@@ -1,69 +1,114 @@
-# fb-watchtower
+# 🛰️ fb-watchtower
 
-Facebook Page monitoring system built with a multi-agent architecture.
+**Facebook Page monitoring system built with a high-resilience, multi-agent architecture.**
 
-fb-watchtower consists of distributed agents that autonomously monitor a public Facebook Page and dispatch near-real-time Slack notifications when new posts are detected.
+`fb-watchtower` is an enterprise-grade solution for near-real-time monitoring of public Facebook Pages. It utilizes a distributed multi-agent system to autonomously observe, reason, and notify when new content is detected, bypassing common scraping hurdles like login walls and dynamic rendering.
 
-## Architecture
+---
 
-The system utilizes an orchestrator and several specific agents, running in an event-driven loop:
-- **Monitoring Agent**: Extracts the latest posts and metadata dynamically using Playwright.
-- **Reasoner Agent**: Evaluates observations against previous states to determine if notifications should trigger.
-- **Notification Agent**: Formats payloads and sends alerts to Slack channels.
-- **Scheduler Agent**: Enforces operational window (e.g., polling during specific hours) natively, keeping execution cycles clean.
-- **State Memory**: Persists previous post links reliably, acting as the system's brain to track changes.
-- **Orchestrator**: Wires agents together and schedules the cycle loops.
+## 🏗️ Multi-Agent Architecture
 
-## Features
-- **Headless scraping**: Playwright integrates effectively to parse client-rendered posts.
-- **Robust resilience**: Includes exponential backoff retries, CSS selectors fallbacks, and overlay dismissals.
-- **Timezone-aware scheduler**: Enforce temporal compliance without messy cron jobs.
-- **Event Bus Pipeline**: Complete loosely-coupled components scaling with node.js event emitters natively.
+`fb-watchtower` is designed with modularity in mind. Its intelligence is decentralized across several specialized agents communicating via a central **Event Bus**:
 
-## Getting Started
+-   **📡 Monitoring Agent**: The primary interface with Facebook. It uses Playwright with stealth plugins to navigate dynamic content, handle cookie injection, and extract raw post evidence.
+-   **🧠 Reasoner Agent**: The decision-maker. It maintains state and compares new observations with historical data to detect changes and filter out noise.
+-   **🔔 Notification Agent**: The outgoing bridge. It transforms detected changes into rich, formatted payloads for Slack notifications.
+-   **⏰ Scheduler Agent**: The heartbeat. It enforces operational windows and polling frequencies natively, ensuring the system respects configured business hours.
+-   **🧠 State Memory**: The system's memory. It utilizes a persistent storage layer (PostgreSQL) to reliably track previously seen content.
+-   **🕹️ Orchestrator**: The conductor. It wires the agents together, manages the execution lifecycle, and ensures the event-driven loop remains robust.
+
+## ✨ Key Capabilities
+
+-   **🛡️ Auth Persistence**: Integrated authentication script (`npm run auth`) to capture and rotate Facebook session cookies, effectively bypassing aggressive login walls.
+-   **🐳 Docker Native**: Fully containerized architecture with multi-stage builds and automated CI/CD via Jenkins.
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js > v18
-- PostgreSQL or other storage implementation
-- Slack Webhook URL
+-   **Node.js**: v20 or later (v18 minimum)
+-   **Postgres**: A running instance for state persistence and audit logs.
+-   **Slack**: A configured Webhook URL for notifications.
 
 ### Installation
 
-1. Clone the repository:
+1.  **Clone & Install**:
+    ```bash
+    git clone https://github.com/thanhduy1706/fb-watchtower.git
+    cd fb-watchtower
+    npm install
+    ```
+
+2.  **Environment Setup**:
+    Create a `.env` file in the root directory. Use the following template:
+    ```env
+    # Monitoring Target
+    FACEBOOK_PAGE_URL=https://www.facebook.com/TargetPageName
+
+    # Notifications
+    SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx/yyy/zzz
+
+    # Database (Postgres)
+    DATABASE_HOST=localhost
+    DATABASE_PORT=5432
+    DATABASE_USERNAME=postgres
+    DATABASE_PASSWORD=your_password
+    DATABASE_NAME=watchtower
+
+    # Scheduling (HH:mm)
+    SCHEDULE_START=08:00
+    SCHEDULE_END=20:00
+    TIMEZONE=Asia/Ho_Chi_Minh
+    CHECK_INTERVAL_MS=300000
+    ```
+
+3.  **Authentication (Crucial)**:
+    Facebook often blocks unauthenticated scrapers. Run the following command once to log in and save your session cookies:
+    ```bash
+    npm run auth
+    ```
+    *This will open a browser window for you to log in manually. Once logged in, the cookies will be saved to your `.env`.*
+
+---
+
+## 🛠️ Usage
+
+### Development
+Run the orchestrator with hot-reloading:
 ```bash
-git clone https://github.com/thanhduy1706/fb-watchtower.git
-cd fb-watchtower
-```
-
-2. Install dependencies:
-```bash
-npm install
-# or
-yarn install
-```
-
-3. Configure your variables. You will need a `.env` file referencing the deployment properties (e.g., Slack URLs, Page URL, schedules).
-
-### Usage
-
-If you encounter login wall issues or need to refresh Facebook session cookies, the system supports interactive authentication:
-
-```bash
-# Obtain fresh Facebook cookies interactively and save to .env
-npm run auth
-```
-
-Start the primary orchestrator loop:
-```bash
-# Start the system
 npm run start
 ```
 
-### CI/CD Deployment
+### Testing
+Run the suite using Vitest:
+```bash
+npm test
+```
 
-The repository includes a Jenkins pipeline inside `Jenkinsfile` configuring automated Docker builds and lifecycle restarts for containerized hosting.
+### Linting & Formatting
+Ensure code quality and consistency:
+```bash
+npm run lint:fix
+npm run format
+```
 
-## License
+---
 
-Private / Proprietary
+## 🐳 Deployment
+
+The project includes a `Dockerfile` and a `Jenkinsfile` for automated deployment.
+
+**Build and run locally with Docker:**
+```bash
+docker build -t fb-watchtower .
+docker run --env-file .env fb-watchtower
+```
+
+---
+
+## 📜 License
+
+Private / Proprietary. All rights reserved.
+
