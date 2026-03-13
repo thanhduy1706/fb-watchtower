@@ -42,10 +42,10 @@ function parseFacebookCookies(): CookieInput[] {
       value: String(c.value),
       domain: String(c.domain),
       path: String(c.path ?? '/'),
-      // Cookie-Editor uses `expirationDate`; Playwright expects `expires`
-      ...(c.expirationDate != null ? { expires: Math.floor(Number(c.expirationDate)) } : {}),
-      ...(c.httpOnly != null ? { httpOnly: Boolean(c.httpOnly) } : {}),
-      ...(c.secure != null ? { secure: Boolean(c.secure) } : {}),
+      // Cookie-Editor uses `expirationDate`; Playwright uses `expires`
+      ...('expirationDate' in c && c.expirationDate != null ? { expires: Math.floor(Number(c.expirationDate)) } : 'expires' in c && c.expires != null ? { expires: Math.floor(Number(c.expires)) } : {}),
+      ...('httpOnly' in c && c.httpOnly != null ? { httpOnly: Boolean(c.httpOnly) } : {}),
+      ...('secure' in c && c.secure != null ? { secure: Boolean(c.secure) } : {}),
       ...(c.sameSite != null ? { sameSite: normaliseSameSite(c.sameSite) } : {}),
     }));
 }
