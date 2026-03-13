@@ -2,13 +2,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { EventBus, Events } from '../../../core/eventBus.js';
 import { SchedulerAgent } from '../scheduler-agent.js';
 
-// ── Helpers ──────────────────────────────────────────────────────
+
 function createSilentLogger() {
   const noop = () => {};
   return { info: noop, warn: noop, error: noop, debug: noop };
 }
 
-// ── SchedulerAgent ───────────────────────────────────────────────
+
 
 describe('SchedulerAgent', () => {
   let eventBus: EventBus;
@@ -24,10 +24,10 @@ describe('SchedulerAgent', () => {
     vi.useRealTimers();
   });
 
-  // ── Signal emission ──────────────────────────────────────────
+  
 
   it('emits SCHEDULER_RUN during operational window', () => {
-    // Set fake time to 14:00 Asia/Ho_Chi_Minh (UTC+7 → 07:00 UTC)
+    
     vi.setSystemTime(new Date('2026-02-27T07:00:00.000Z'));
 
     const runSpy = vi.fn();
@@ -51,7 +51,7 @@ describe('SchedulerAgent', () => {
   });
 
   it('emits SCHEDULER_PAUSE outside operational window', () => {
-    // Set fake time to 05:00 Asia/Ho_Chi_Minh (UTC+7 → 22:00 UTC prev day)
+    
     vi.setSystemTime(new Date('2026-02-26T22:00:00.000Z'));
 
     const pauseSpy = vi.fn();
@@ -74,7 +74,7 @@ describe('SchedulerAgent', () => {
     expect(agent.getState().currentSignal).toBe('PAUSE');
   });
 
-  // ── Lifecycle ────────────────────────────────────────────────
+  
 
   it('start() is idempotent', () => {
     vi.setSystemTime(new Date('2026-02-27T07:00:00.000Z'));
@@ -94,9 +94,9 @@ describe('SchedulerAgent', () => {
     );
 
     agent.start();
-    agent.start(); // should be a no-op
+    agent.start(); 
 
-    // Only one immediate tick should have fired
+    
     expect(runSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -122,13 +122,13 @@ describe('SchedulerAgent', () => {
 
     agent.stop();
 
-    // Advance time — no more ticks should fire
+    
     vi.advanceTimersByTime(5_000);
     expect(runSpy).toHaveBeenCalledTimes(1);
     expect(agent.getState().isRunning).toBe(false);
   });
 
-  // ── Polling ──────────────────────────────────────────────────
+  
 
   it('ticks on the configured polling interval', () => {
     vi.setSystemTime(new Date('2026-02-27T07:00:00.000Z'));
@@ -147,17 +147,17 @@ describe('SchedulerAgent', () => {
       createSilentLogger(),
     );
 
-    agent.start(); // immediate tick
+    agent.start(); 
     expect(runSpy).toHaveBeenCalledTimes(1);
 
-    vi.advanceTimersByTime(1_000); // second tick
+    vi.advanceTimersByTime(1_000); 
     expect(runSpy).toHaveBeenCalledTimes(2);
 
-    vi.advanceTimersByTime(1_000); // third tick
+    vi.advanceTimersByTime(1_000); 
     expect(runSpy).toHaveBeenCalledTimes(3);
   });
 
-  // ── State ────────────────────────────────────────────────────
+  
 
   it('getState() returns an immutable snapshot', () => {
     vi.setSystemTime(new Date('2026-02-27T07:00:00.000Z'));
@@ -184,11 +184,11 @@ describe('SchedulerAgent', () => {
     expect(Object.isFrozen(state)).toBe(true);
   });
 
-  // ── Signal transition history ────────────────────────────────
+  
 
   it('records signal transitions in history', () => {
-    // Start outside window
-    vi.setSystemTime(new Date('2026-02-27T01:00:00.000Z')); // 08:00 VN
+    
+    vi.setSystemTime(new Date('2026-02-27T01:00:00.000Z')); 
 
     agent = new SchedulerAgent(
       eventBus,
@@ -196,17 +196,17 @@ describe('SchedulerAgent', () => {
         windowStartHour: 9,
         windowEndHour: 21,
         timezone: 'Asia/Ho_Chi_Minh',
-        pollingIntervalMs: 60_000 * 60, // 1hr ticks for easy stepping
+        pollingIntervalMs: 60_000 * 60, 
       },
       createSilentLogger(),
     );
 
     agent.start();
-    // Initial state is PAUSE (08:00 < 09:00), but since default
-    // currentSignal is already PAUSE, no transition is recorded
+    
+    
     const historyBefore = agent.getHistory();
 
-    // Move into the window (09:00 VN = 02:00 UTC)
+    
     vi.setSystemTime(new Date('2026-02-27T02:00:00.000Z'));
     vi.advanceTimersByTime(60_000 * 60);
 
@@ -216,7 +216,7 @@ describe('SchedulerAgent', () => {
     expect(historyAfter[0].reason).toContain('Entered operational window');
   });
 
-  // ── Error handling ───────────────────────────────────────────
+  
 
   it('defaults to PAUSE on time resolution error', () => {
     vi.setSystemTime(new Date('2026-02-27T07:00:00.000Z'));
@@ -243,7 +243,7 @@ describe('SchedulerAgent', () => {
     expect(agent.getState().lastError).toBeTruthy();
   });
 
-  // ── Policy accessor ──────────────────────────────────────────
+  
 
   it('getPolicy() returns the merged policy', () => {
     agent = new SchedulerAgent(

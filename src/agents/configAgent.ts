@@ -16,7 +16,7 @@ export const SCHEMA: Record<string, { required: boolean; default?: string }> = {
   scheduleEnd: { required: false, default: '22:00' },
 };
 
-// Map of env var names to schema keys
+
 const ENV_MAP: Record<string, string> = {
   FACEBOOK_PAGE_URL: 'facebookPageUrl',
   SLACK_WEBHOOK_URL: 'slackWebhookUrl',
@@ -40,7 +40,7 @@ export class ConfigAgent {
   }
 
   load(): void {
-    // Load .env file if it exists
+    
     if (fs.existsSync(this.envPath)) {
       const parsed = dotenv.parse(fs.readFileSync(this.envPath));
       for (const [envKey, schemaKey] of Object.entries(ENV_MAP)) {
@@ -50,21 +50,21 @@ export class ConfigAgent {
       }
     }
 
-    // Override with process.env (already loaded by dotenv/config)
+    
     for (const [envKey, schemaKey] of Object.entries(ENV_MAP)) {
       if (process.env[envKey] !== undefined) {
         this.values.set(schemaKey, process.env[envKey] as string);
       }
     }
 
-    // Apply defaults for missing keys
+    
     for (const [key, spec] of Object.entries(SCHEMA)) {
       if (!this.values.has(key) && spec.default !== undefined) {
         this.values.set(key, spec.default);
       }
     }
 
-    // Validate required fields
+    
     for (const [key, spec] of Object.entries(SCHEMA)) {
       if (spec.required && !this.values.get(key)) {
         throw new Error(`Missing required configuration: ${key} (set via environment variable)`);

@@ -1,10 +1,7 @@
 import type { MonitoringAgentConfig } from '../types/index.js';
 import { DEFAULT_SELECTOR_CONFIG } from './selectors.js';
 
-/**
- * Default Monitoring Agent configuration.
- * Override individual fields via partial config at construction time.
- */
+
 export const DEFAULT_AGENT_CONFIG: MonitoringAgentConfig = {
   pageUrl: '',
   selectors: DEFAULT_SELECTOR_CONFIG,

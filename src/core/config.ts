@@ -31,7 +31,7 @@ export function loadConfig(): AppConfig {
     dbPass: agent.get('dbPass'),
     dbName: agent.get('dbName'),
 
-    // Scheduler window
+    
     scheduleStart: parseHour(agent.get('scheduleStart')),
     scheduleEnd: parseHour(agent.get('scheduleEnd')),
   });

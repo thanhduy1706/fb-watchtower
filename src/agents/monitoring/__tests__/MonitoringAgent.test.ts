@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MonitoringError, MonitoringErrorCode } from '../errors.js';
 import type { MonitoringAgentConfig } from '../../../types/index.js';
 
-// ─── Mock Playwright (MUST be hoisted before any imports that use it) ──
+
 
 const { mockLaunch, mockUse } = vi.hoisted(() => ({
   mockLaunch: vi.fn(),
@@ -28,10 +28,10 @@ vi.mock('puppeteer-extra-plugin-stealth', () => ({
   default: vi.fn(() => ({})),
 }));
 
-// Import agent AFTER mock is set up
+
 import { MonitoringAgent } from '../MonitoringAgent.js';
 
-// ─── Helpers ───────────────────────────────────────────────
+
 
 function setupBrowserMocks() {
   const page = {
@@ -62,12 +62,12 @@ function createAgent(overrides: Partial<MonitoringAgentConfig> = {}) {
   });
 }
 
-// ─── Tests ─────────────────────────────────────────────────
+
 
 describe('MonitoringAgent', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset all mocks to default (resolved undefined)
+    
     mockGoto.mockResolvedValue(undefined);
     mockPageContent.mockResolvedValue('<html></html>');
     mockPageClose.mockResolvedValue(undefined);
@@ -75,7 +75,7 @@ describe('MonitoringAgent', () => {
     mockBrowserClose.mockResolvedValue(undefined);
   });
 
-  // ─── Successful Observation ─────────────────────
+  
 
   it('should return a structured observation on success', async () => {
     setupBrowserMocks();
@@ -158,7 +158,7 @@ describe('MonitoringAgent', () => {
     await agent.shutdown();
   });
 
-  // ─── Retry on Navigation Failure ────────────────
+  
 
   it('should retry navigation and succeed after transient failure', async () => {
     setupBrowserMocks();
@@ -179,7 +179,7 @@ describe('MonitoringAgent', () => {
     await agent.shutdown();
   });
 
-  // ─── Max Retries Exhausted ─────────────────────
+  
 
   it('should throw NAVIGATION_FAILED after max retries', async () => {
     setupBrowserMocks();
@@ -196,7 +196,7 @@ describe('MonitoringAgent', () => {
     await agent.shutdown();
   });
 
-  // ─── Selector Not Found / Extraction Failed ────
+  
 
   it('should throw EXTRACTION_FAILED when posts cannot be located', async () => {
     setupBrowserMocks();
@@ -213,7 +213,7 @@ describe('MonitoringAgent', () => {
     await agent.shutdown();
   });
 
-  // ─── DOM Hash Consistency ──────────────────────
+  
 
   it('should compute consistent hash for unchanged feed', async () => {
     setupBrowserMocks();
@@ -229,7 +229,7 @@ describe('MonitoringAgent', () => {
     await agent.shutdown();
   });
 
-  // ─── Uninitialized Error ──────────────────────
+  
 
   it('should throw if observe() called before initialize()', async () => {
     const agent = createAgent();

@@ -31,7 +31,7 @@ export class NotificationAgent {
     this.#log = options.logger ?? createLogger('Notification');
   }
 
-  // ── Public API ──────────────────────────────────────────────────
+  
 
   async notify(decision: Decision): Promise<DeliveryResult> {
     const payload = this.#buildPayload(decision);
@@ -51,14 +51,14 @@ export class NotificationAgent {
 
         statusCode = response.status;
 
-        // Success
+        
         if (response.ok) {
           const result = this.#buildResult(true, statusCode, attempt, null);
           this.#log.info(`Delivered (${statusCode}) on attempt ${attempt}`);
           return result;
         }
 
-        // Client error — no point retrying
+        
         if (statusCode >= 400 && statusCode < 500) {
           const body = await this.#safeReadBody(response);
           const msg = `Slack returned ${statusCode}: ${body}`;
@@ -66,7 +66,7 @@ export class NotificationAgent {
           return this.#buildResult(false, statusCode, attempt, msg);
         }
 
-        // Server error — retry with backoff
+        
         lastError = `Slack returned ${statusCode}`;
         this.#log.warn(`Attempt ${attempt}/${this.#maxRetries} failed (${statusCode}) — retrying…`);
 
@@ -84,13 +84,13 @@ export class NotificationAgent {
       }
     }
 
-    // All retries exhausted
+    
     const msg = `All ${this.#maxRetries} attempts failed. Last error: ${lastError}`;
     this.#log.error(msg);
     return this.#buildResult(false, statusCode, this.#maxRetries, msg);
   }
 
-  // ── Private helpers ─────────────────────────────────────────────
+  
 
   #buildPayload(decision: Decision): any {
     const dateStr = new Date().toLocaleString('en-US', {

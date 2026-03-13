@@ -1,6 +1,4 @@
-/**
- * Error codes for the Monitoring Agent.
- */
+
 export enum MonitoringErrorCode {
   NAVIGATION_FAILED = 'NAVIGATION_FAILED',
   SELECTOR_NOT_FOUND = 'SELECTOR_NOT_FOUND',
@@ -9,10 +7,7 @@ export enum MonitoringErrorCode {
   BROWSER_LAUNCH_FAILED = 'BROWSER_LAUNCH_FAILED',
 }
 
-/**
- * Structured error class for monitoring failures.
- * Includes a machine-readable code and a retryable flag to guide retry logic.
- */
+
 export class MonitoringError extends Error {
   readonly code: MonitoringErrorCode;
   readonly retryable: boolean;

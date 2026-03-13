@@ -53,19 +53,13 @@ export class ResilienceAgent {
     this.alertsSent = 0;
   }
 
-  /**
-   * Record a successful operation for a subsystem, resetting its consecutive
-   * failure count.
-   */
+  
   recordSuccess(subsystem: Subsystem): void {
     this._assertSubsystem(subsystem);
     this.consecutiveFailures[subsystem] = 0;
   }
 
-  /**
-   * Record a failure for a subsystem. If the consecutive failure count reaches
-   * the threshold, recovery and alert callbacks are triggered.
-   */
+  
   recordFailure(subsystem: Subsystem, error: Error): void {
     this._assertSubsystem(subsystem);
 
@@ -77,12 +71,12 @@ export class ResilienceAgent {
     }
   }
 
-  /** Mark the start of a monitoring cycle. */
+  
   startCycle(): void {
     this.lastCycleStartMs = Date.now();
   }
 
-  /** Mark the end of a monitoring cycle and record its duration. */
+  
   endCycle(): void {
     if (this.lastCycleStartMs === null) {
       return;
@@ -105,9 +99,7 @@ export class ResilienceAgent {
     this.lastCycleStartMs = null;
   }
 
-  /**
-   * Returns a frozen snapshot of all tracked metrics.
-   */
+  
   getMetrics(): ResilienceMetrics {
     return Object.freeze({
       consecutiveFailures: { ...this.consecutiveFailures },
@@ -118,14 +110,14 @@ export class ResilienceAgent {
     });
   }
 
-  /** Reset all consecutive failure counters. */
+  
   reset(): void {
     for (const s of SUBSYSTEMS) {
       this.consecutiveFailures[s] = 0;
     }
   }
 
-  // ── Private ──────────────────────────────────────────────────────────
+  
 
   private _assertSubsystem(subsystem: string): asserts subsystem is Subsystem {
     if (!SUBSYSTEMS.includes(subsystem as Subsystem)) {
@@ -146,7 +138,7 @@ export class ResilienceAgent {
       try {
         this.onRecover(subsystem, error);
       } catch {
-        /* recovery itself must not crash the agent */
+        
       }
     }
 
@@ -160,7 +152,7 @@ export class ResilienceAgent {
       try {
         this.onAlert(message);
       } catch {
-        /* alert delivery failure must not crash the agent */
+        
       }
     }
   }

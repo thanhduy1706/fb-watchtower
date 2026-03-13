@@ -4,18 +4,7 @@ import { loadSchedulerPolicy, DEFAULT_SCHEDULER_POLICY } from './config.js';
 import type { SchedulerPolicy } from '../../types/scheduler.js';
 import { resolveCurrentTime, isWithinOperationalWindow, formatTimeForLog } from './utils.js';
 
-/**
- * Scheduler Agent — Temporal governance and lifecycle control.
- *
- * Responsibilities:
- *  • Enforce operational window (configurable, default 09:00–21:00 Asia/Ho_Chi_Minh)
- *  • Activate / suspend monitoring cycles via EventBus signals
- *  • Emit "SCHEDULER_RUN" or "SCHEDULER_PAUSE" to downstream agents
- *
- * Failure handling:
- *  • Logs time resolution errors
- *  • Defaults to safe "PAUSE" mode if time cannot be resolved
- */
+
 export class SchedulerAgent {
   private policy: SchedulerPolicy;
   private eventBus: EventBus;
@@ -38,7 +27,7 @@ export class SchedulerAgent {
     this.eventBus = eventBus;
     this.log = logger ?? createLogger('Scheduler');
 
-    // Merge: env vars → overrides → defaults
+    
     const envPolicy = loadSchedulerPolicy();
     this.policy = {
       ...DEFAULT_SCHEDULER_POLICY,
@@ -47,9 +36,9 @@ export class SchedulerAgent {
     };
   }
 
-  // Lifecycle
+  
 
-  /** Start the polling loop. Idempotent — calling twice is a no-op. */
+  
   start() {
     if (this.isRunning) {
       this.log.warn('Already running — ignoring duplicate start()');
@@ -61,12 +50,12 @@ export class SchedulerAgent {
       `Started — window ${this.formatWindow()}, polling every ${this.policy.pollingIntervalMs}ms`,
     );
 
-    // Run immediately, then on interval
+    
     this.tick();
     this.intervalId = setInterval(() => this.tick(), this.policy.pollingIntervalMs);
   }
 
-  /** Stop the polling loop and reset state. */
+  
   stop() {
     if (!this.isRunning) return;
 
@@ -79,9 +68,9 @@ export class SchedulerAgent {
     this.log.info('Stopped');
   }
 
-  // Public accessors
+  
 
-  /** Returns an immutable snapshot of the current agent state. */
+  
   getState() {
     return Object.freeze({
       currentSignal: this.currentSignal,
@@ -92,19 +81,19 @@ export class SchedulerAgent {
     });
   }
 
-  /** Returns a copy of the signal transition history (newest first). */
+  
   getHistory() {
     return [...this.history];
   }
 
-  /** Returns the active policy configuration. */
+  
   getPolicy() {
     return { ...this.policy };
   }
 
-  // Core tick logic
+  
 
-  /** @private One scheduling cycle: resolve time → decide → emit. */
+  
   private tick() {
     try {
       const now = resolveCurrentTime(this.policy.timezone);
@@ -115,7 +104,7 @@ export class SchedulerAgent {
       const shouldRun = isWithinOperationalWindow(now, this.policy);
       const newSignal = shouldRun ? 'RUN' : 'PAUSE';
 
-      // Record transition only on change
+      
       if (newSignal !== this.currentSignal) {
         const reason = shouldRun
           ? `Entered operational window (${timeStr})`
@@ -126,7 +115,7 @@ export class SchedulerAgent {
         this.log.info(`Signal → ${newSignal}: ${reason}`);
       }
 
-      // Always emit the current signal so late-joining listeners receive the correct state
+      
       if (shouldRun) {
         this.eventBus.emit(Events.SCHEDULER_RUN as any);
       } else {
@@ -137,9 +126,9 @@ export class SchedulerAgent {
     }
   }
 
-  // Error handling
+  
 
-  /** @private Safe fallback: emit PAUSE and log the error. */
+  
   private handleTickError(err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     this.lastError = message;
@@ -148,7 +137,7 @@ export class SchedulerAgent {
 
     this.log.error(`Time resolution failed — defaulting to PAUSE: ${message}`);
 
-    // Safe default: PAUSE on error
+    
     if (this.currentSignal !== 'PAUSE') {
       this.currentSignal = 'PAUSE';
       this.recordTransition('PAUSE', `Error: ${message}`);
@@ -157,9 +146,9 @@ export class SchedulerAgent {
     this.eventBus.emit(Events.SCHEDULER_PAUSE as any);
   }
 
-  // History tracking
+  
 
-  /** @private Append a transition entry; cap at MAX_HISTORY. */
+  
   private recordTransition(signal: string, reason: string) {
     this.history.unshift({
       signal,
@@ -172,9 +161,9 @@ export class SchedulerAgent {
     }
   }
 
-  // Formatting helpers
+  
 
-  /** @private Format the operational window for log output. */
+  
   private formatWindow() {
     const pad = (n: number) => String(n).padStart(2, '0');
     const start = `${pad(this.policy.windowStartHour)}:${pad(this.policy.windowStartMinute)}`;

@@ -8,7 +8,7 @@ chromium.use(stealthPlugin());
 async function main() {
   console.log('Starting interactive browser for Facebook authentication...');
 
-  // Launch visible browser
+  
   const browser = await chromium.launch({ headless: false });
   const context = await browser.newContext({
     locale: 'en-US',
@@ -26,11 +26,11 @@ async function main() {
 
   await page.goto('https://www.facebook.com/login', { waitUntil: 'domcontentloaded' });
 
-  // Poll for successful login (detecting c_user cookie)
+  
   console.log('Waiting for successful login...');
 
   let isLoggedIn = false;
-  for (let i = 0; i < 300; i++) { // up to 5 minutes
+  for (let i = 0; i < 300; i++) { 
     const currentCookies = await context.cookies();
     if (currentCookies.some(c => c.name === 'c_user')) {
       isLoggedIn = true;
@@ -47,18 +47,18 @@ async function main() {
 
   console.log('✅ Successfully detected login (c_user cookie found).');
 
-  // Wait a moment for remaining cookies like xs to settle
+  
   await page.waitForTimeout(3000);
 
-  // Grab cookies
+  
   const cookies = await context.cookies();
 
-  // Filter relevant Facebook cookies just to be safe
+  
   const fbCookies = cookies.filter(c => c.domain.includes('facebook.com'));
 
   console.log(`Extracted ${fbCookies.length} Facebook cookies.`);
 
-  // Update .env file
+  
   const envPath = path.resolve(process.cwd(), '.env');
   let envContent = '';
   try {
@@ -69,13 +69,13 @@ async function main() {
 
   const cookiesJson = JSON.stringify(fbCookies);
 
-  // Replace or append FACEBOOK_COOKIES
+  
   if (envContent.includes('FACEBOOK_COOKIES=')) {
-    // Regex replace the line
+    
     envContent = envContent.replace(/^FACEBOOK_COOKIES=.*$/m, `FACEBOOK_COOKIES=${cookiesJson}`);
   } else {
-    // Append
-    // Ensure newline if not empty
+    
+    
     if (envContent && !envContent.endsWith('\n')) {
       envContent += '\n';
     }

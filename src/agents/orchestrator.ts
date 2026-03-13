@@ -9,7 +9,7 @@ import { MonitoringError, MonitoringErrorCode } from './monitoring/errors.js';
 
 export interface CycleResult {
   success: boolean;
-  duration: number; // milliseconds
+  duration: number; 
   changeDetected: boolean;
   postLink: string | null;
   error: string | null;
@@ -32,10 +32,10 @@ export class Orchestrator {
   #consecutiveExtractionFailures = 0;
   #pauseUntil: number | null = null;
 
-  // After this many consecutive EXTRACTION_FAILED cycles, enter degraded mode.
+  
   static readonly MAX_EXTRACTION_FAILURES_BEFORE_PAUSE = 5;
-  // Duration of degraded-mode backoff window in milliseconds.
-  static readonly EXTRACTION_BACKOFF_WINDOW_MS = 5 * 60_000; // 5 minutes
+  
+  static readonly EXTRACTION_BACKOFF_WINDOW_MS = 5 * 60_000; 
 
   constructor(agents: OrchestratorAgents, eventBus: EventBus, logger?: Logger) {
     this.#agents = agents;
@@ -43,7 +43,7 @@ export class Orchestrator {
     this.#log = logger ?? createLogger('Orchestrator');
   }
 
-  // Lifecycle
+  
 
   start(): void {
     if (this.#started) return;
@@ -57,7 +57,7 @@ export class Orchestrator {
     this.#started = false;
     this.#eventBus.removeListener(Events.SCHEDULER_RUN, this.#onRun);
 
-    // Drain in-flight cycle
+    
     if (this.#activePromise) {
       this.#log.info('Waiting for active cycle to finish…');
       await this.#activePromise;
@@ -66,9 +66,9 @@ export class Orchestrator {
     this.#log.info('Stopped');
   }
 
-  // Pipeline
+  
   async runCycle(): Promise<CycleResult> {
-    // Concurrency guard
+    
     if (this.#isRunning) {
       this.#log.warn('Cycle already in progress — skipping');
       return {
@@ -82,14 +82,14 @@ export class Orchestrator {
 
     const now = Date.now();
 
-    // Clear degraded mode if backoff window has elapsed
+    
     if (this.#pauseUntil !== null && now >= this.#pauseUntil) {
       this.#log.info('Extraction backoff window elapsed — resuming normal operation');
       this.#pauseUntil = null;
       this.#consecutiveExtractionFailures = 0;
     }
 
-    // If we're still within the backoff window, skip this cycle early
+    
     if (this.#pauseUntil !== null && now < this.#pauseUntil) {
       this.#log.warn(
         'Monitoring is in degraded backoff mode — skipping cycle until extraction stabilizes.',
@@ -107,15 +107,15 @@ export class Orchestrator {
     const start = Date.now();
 
     try {
-      // Step 1 — Observe
+      
       this.#log.info('Step 1/4 — Observing…');
       const observation = (await this.#observeWithRetries()) as Observation;
 
-      // Step 2 — Evaluate
+      
       this.#log.info('Step 2/4 — Evaluating…');
       const decision = await this.#agents.reasoner.evaluate(observation);
 
-      // Short-circuit if nothing changed
+      
       if (!decision.changeDetected) {
         this.#log.info('No change detected — cycle complete');
         const result = this.#buildResult(true, start, false, null, null);
@@ -123,7 +123,7 @@ export class Orchestrator {
         return result;
       }
 
-      // Step 3 — Notify
+      
       this.#log.info('Step 3/4 — Notifying…');
       try {
         await this.#agents.notifier.notify(decision);
@@ -133,7 +133,7 @@ export class Orchestrator {
         this.#log.error('Notification failed (continuing to memory update):', message);
       }
 
-      // Step 4 — Remember
+      
       this.#log.info('Step 4/4 — Updating memory…');
       await this.#agents.memory.setLastPost(decision.postLink!);
 
@@ -145,7 +145,7 @@ export class Orchestrator {
       const message = err instanceof Error ? err.message : (err as unknown as string);
       this.#log.error('Cycle failed:', message);
 
-      // Track consecutive extraction failures to enter degraded backoff mode.
+      
       if (err instanceof MonitoringError && err.code === MonitoringErrorCode.EXTRACTION_FAILED) {
         this.#consecutiveExtractionFailures += 1;
 
@@ -157,7 +157,7 @@ export class Orchestrator {
           );
         }
       } else {
-        // Reset counter for non-extraction-related errors
+        
         this.#consecutiveExtractionFailures = 0;
       }
 
@@ -169,7 +169,7 @@ export class Orchestrator {
     }
   }
 
-  // Private helpers
+  
 
   #onRun = (): void => {
     this.#activePromise = this.runCycle().finally(() => {
@@ -190,7 +190,7 @@ export class Orchestrator {
       } catch (err: unknown) {
         lastError = err;
 
-        // Only retry for MonitoringError marked as retryable
+        
         if (!(err instanceof MonitoringError) || !err.retryable || attempt === maxAttempts) {
           throw err;
         }
@@ -199,12 +199,12 @@ export class Orchestrator {
           `Observe attempt ${attempt}/${maxAttempts} failed (${err.code}) — will retry shortly.`,
         );
 
-        // Small linear backoff to avoid hammering the page
+        
         await this.#sleep(1000 * attempt);
       }
     }
 
-    // Defensive fallback — should be unreachable
+    
     throw lastError instanceof Error ? lastError : new Error('Unknown observe error');
   }
 

@@ -47,7 +47,7 @@ describe('EventBus', () => {
     bus.on(Events.SCHEDULER_RUN, safeSpy);
     bus.emit(Events.SCHEDULER_RUN);
 
-    // Second listener should still be called
+    
     expect(safeSpy).toHaveBeenCalledTimes(1);
     expect(errorSpy).toHaveBeenCalled();
 

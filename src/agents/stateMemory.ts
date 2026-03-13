@@ -5,7 +5,7 @@ import { type AppConfig } from '../core/config.js';
 const STATE_KEY = 'last_post';
 
 export class StateMemory {
-  private pool: pkg.Pool;
+  public pool: pkg.Pool;
 
   constructor(config: AppConfig) {
     this.pool = new Pool({
@@ -17,7 +17,7 @@ export class StateMemory {
     });
   }
 
-  /** Create the state table if it doesn't exist. */
+  
   async init(): Promise<void> {
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS state (
@@ -28,10 +28,7 @@ export class StateMemory {
     `);
   }
 
-  /**
-   * Returns the array of recently stored post links.
-   * Internally parses the JSON array.
-   */
+  
   async getRecentPosts(): Promise<string[]> {
     const res = await this.pool.query('SELECT value FROM state WHERE key = $1', [STATE_KEY]);
     if (res.rows.length === 0) return [];
@@ -40,14 +37,11 @@ export class StateMemory {
       const parsed = JSON.parse(res.rows[0].value);
       return Array.isArray(parsed) ? parsed : [res.rows[0].value];
     } catch {
-      return [res.rows[0].value]; // fallback for old single-string state
+      return [res.rows[0].value]; 
     }
   }
 
-  /**
-   * Atomically stores the post link, keeping a history of up to 5 posts.
-   * No-ops if the value is already in the recent history.
-   */
+  
   async setLastPost(postLink: string): Promise<void> {
     if (typeof postLink !== 'string' || postLink.trim() === '') {
       throw new Error('postLink must be a non-empty string');
@@ -55,7 +49,7 @@ export class StateMemory {
 
     const recents = await this.getRecentPosts();
     if (recents.includes(postLink)) {
-      return; // idempotent — skip duplicate write
+      return; 
     }
 
     const updated = [postLink, ...recents].slice(0, 5);
@@ -69,7 +63,7 @@ export class StateMemory {
     );
   }
 
-  /** Gracefully close the database connection. */
+  
   async close(): Promise<void> {
     await this.pool.end();
   }

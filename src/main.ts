@@ -15,7 +15,7 @@ async function main(): Promise<void> {
 
   const agent = new MonitoringAgent({ pageUrl });
 
-  // Graceful shutdown
+  
   const shutdown = async () => {
     logger.info('Received shutdown signal. Cleaning up...');
     await agent.shutdown();

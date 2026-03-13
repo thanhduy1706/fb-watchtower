@@ -1,9 +1,6 @@
 import type { SchedulerPolicy } from '../../types/scheduler.js';
 
-/**
- * Default policy: operate between 09:00–21:00 in Asia/Ho_Chi_Minh,
- * checking every 30 seconds.
- */
+
 export const DEFAULT_SCHEDULER_POLICY: SchedulerPolicy = {
   windowStartHour: 9,
   windowStartMinute: 0,
@@ -13,10 +10,7 @@ export const DEFAULT_SCHEDULER_POLICY: SchedulerPolicy = {
   pollingIntervalMs: 30_000,
 };
 
-/**
- * Load scheduler policy from environment variables, falling back
- * to defaults for any unspecified value.
- */
+
 export function loadSchedulerPolicy(): SchedulerPolicy {
   const env = process.env;
 
@@ -35,21 +29,18 @@ export function loadSchedulerPolicy(): SchedulerPolicy {
   };
 }
 
-/**
- * Parse "HH:MM" or bare hour number into { hour, minute }.
- * Returns null if the value is falsy or unparseable.
- */
+
 function parseTimeParts(value: string | undefined): { hour: number; minute: number } | null {
   if (!value) return null;
 
-  // "HH:MM" format
+  
   if (value.includes(':')) {
     const [h, m] = value.split(':').map(Number);
     if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
     return { hour: h, minute: m };
   }
 
-  // Bare number (hour only)
+  
   const hour = Number(value);
   if (!Number.isFinite(hour)) return null;
   return { hour, minute: 0 };

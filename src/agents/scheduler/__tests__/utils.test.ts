@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { resolveCurrentTime, isWithinOperationalWindow, formatTimeForLog } from '../utils.js';
 import type { SchedulerPolicy } from '../../../types/scheduler.js';
 
-// ── Test policy ──────────────────────────────────────────────────
+
 const POLICY: SchedulerPolicy = {
   windowStartHour: 9,
   windowStartMinute: 0,
@@ -12,7 +12,7 @@ const POLICY: SchedulerPolicy = {
   pollingIntervalMs: 30_000,
 };
 
-// ── resolveCurrentTime ───────────────────────────────────────────
+
 
 describe('resolveCurrentTime', () => {
   it('returns a valid Date for a known timezone', () => {
@@ -31,7 +31,7 @@ describe('resolveCurrentTime', () => {
   });
 });
 
-// ── isWithinOperationalWindow ────────────────────────────────────
+
 
 describe('isWithinOperationalWindow', () => {
   it('returns true at 14:00 (mid-window)', () => {
@@ -83,18 +83,18 @@ describe('isWithinOperationalWindow', () => {
       windowEndMinute: 45,
     };
 
-    // 08:30 → inside
+    
     expect(isWithinOperationalWindow(new Date(2026, 1, 27, 8, 30, 0), customPolicy)).toBe(true);
-    // 08:29 → outside
+    
     expect(isWithinOperationalWindow(new Date(2026, 1, 27, 8, 29, 0), customPolicy)).toBe(false);
-    // 17:44 → inside
+    
     expect(isWithinOperationalWindow(new Date(2026, 1, 27, 17, 44, 0), customPolicy)).toBe(true);
-    // 17:45 → outside
+    
     expect(isWithinOperationalWindow(new Date(2026, 1, 27, 17, 45, 0), customPolicy)).toBe(false);
   });
 });
 
-// ── formatTimeForLog ─────────────────────────────────────────────
+
 
 describe('formatTimeForLog', () => {
   it('returns a non-empty formatted string', () => {
@@ -106,7 +106,7 @@ describe('formatTimeForLog', () => {
 
   it('includes date and time components', () => {
     const result = formatTimeForLog(new Date(2026, 0, 15, 14, 30, 45), 'UTC');
-    // en-GB format: "DD/MM/YYYY, HH:MM:SS"
+    
     expect(result).toMatch(/\d{2}\/\d{2}\/\d{4}/);
     expect(result).toMatch(/\d{2}:\d{2}:\d{2}/);
   });

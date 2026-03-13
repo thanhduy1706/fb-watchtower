@@ -12,9 +12,7 @@ export class EventBus extends EventEmitter {
     this.setMaxListeners(20);
   }
 
-  /**
-   * Emit with error boundary — listener errors are logged, never propagated.
-   */
+  
   emit(event: string | symbol, ...args: any[]): boolean {
     const listeners = this.listeners(event);
 

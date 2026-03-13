@@ -31,7 +31,7 @@ function parseFacebookCookies(): CookieInput[] {
     const v = String(value ?? '').toLowerCase();
     if (v === 'strict') return 'Strict';
     if (v === 'lax') return 'Lax';
-    // "no_restriction" is Cookie-Editor's label for the SameSite=None attribute
+    
     return 'None';
   };
 
@@ -42,7 +42,7 @@ function parseFacebookCookies(): CookieInput[] {
       value: String(c.value),
       domain: String(c.domain),
       path: String(c.path ?? '/'),
-      // Cookie-Editor uses `expirationDate`; Playwright uses `expires`
+      
       ...('expirationDate' in c && c.expirationDate != null ? { expires: Math.floor(Number(c.expirationDate)) } : 'expires' in c && c.expires != null ? { expires: Math.floor(Number(c.expires)) } : {}),
       ...('httpOnly' in c && c.httpOnly != null ? { httpOnly: Boolean(c.httpOnly) } : {}),
       ...('secure' in c && c.secure != null ? { secure: Boolean(c.secure) } : {}),

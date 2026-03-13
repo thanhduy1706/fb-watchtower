@@ -27,7 +27,7 @@ export class ReasonerAgent {
     const recentPosts = await this.#memory.getRecentPosts();
 
     if (recentPosts.length === 0) {
-      // First ever run — seed the memory, don't trigger notification
+      
       const seedLink = candidates[0];
       this.#log.info('No prior state found — seeding memory on first run.');
       await this.#memory.setLastPost(seedLink);
@@ -36,7 +36,7 @@ export class ReasonerAgent {
 
     const cleanRecents = recentPosts.map((p) => this.#normalizeUrl(p));
 
-    // Find the first candidate that is not already in recent history
+    
     const firstNewIndex = cleanCandidates.findIndex(
       (candidate) => !cleanRecents.includes(candidate),
     );
@@ -49,7 +49,7 @@ export class ReasonerAgent {
     const selectedLink = candidates[firstNewIndex];
     const cleanSelected = cleanCandidates[firstNewIndex];
 
-    // New post detected!
+    
     this.#log.info(`New post detected! Previous: ${cleanRecents[0]?.slice(0, 60) ?? 'none'}…`);
     this.#log.info(`New link: ${cleanSelected.slice(0, 60)}…`);
     return { changeDetected: true, postLink: selectedLink, contentPreview: content_preview };
@@ -61,7 +61,7 @@ export class ReasonerAgent {
       const parsed = new URL(url);
       return `${parsed.origin}${parsed.pathname}`;
     } catch {
-      return url.split('?')[0]; // fallback
+      return url.split('?')[0]; 
     }
   }
 }

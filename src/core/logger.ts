@@ -40,7 +40,7 @@ export const systemLogger = winston.createLogger({
   transports: [
     new winston.transports.Console({
       format: winston.format.combine(
-        winston.format.colorize({ all: false }), // colorize level output automatically
+        winston.format.colorize({ all: false }), 
         customFormat,
       ),
     }),
@@ -58,11 +58,9 @@ export function createLogger(name: string): Logger {
   };
 }
 
-// ── Helpers ──────────────────────────────────────────────────────
 
-/**
- * Format string arguments sequentially, simulating standard console.log array parsing.
- */
+
+
 function formatArgs(args: any[]): string {
   return args
     .map((arg) => {
