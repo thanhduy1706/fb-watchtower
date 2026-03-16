@@ -120,6 +120,10 @@ export class MonitoringAgent {
       const html = await this.page.content();
       postIds = this.#extractPostIdsFromHtml(html);
       if (postIds.length > 0) {
+        this.logger.info(`Found initial post IDs. Waiting 2s for dynamic feed items to load...`);
+        await this.sleep(2000);
+        const finalHtml = await this.page.content();
+        postIds = this.#extractPostIdsFromHtml(finalHtml);
         break;
       }
       await this.sleep(pollIntervalMs);

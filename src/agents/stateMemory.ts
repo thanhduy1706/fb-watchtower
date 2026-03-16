@@ -52,7 +52,7 @@ export class StateMemory {
       return; 
     }
 
-    const updated = [postLink, ...recents].slice(0, 5);
+    const updated = [postLink, ...recents].slice(0, 50);
     const valueStr = JSON.stringify(updated);
 
     await this.pool.query(
