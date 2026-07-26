@@ -135,7 +135,7 @@ export class Orchestrator {
 
       
       this.#log.info('Step 4/4 — Updating memory…');
-      await this.#agents.memory.setLastPost(decision.postLink!);
+      await this.#agents.memory.addPosts(decision.newLinks ?? [decision.postLink!]);
 
       const result = this.#buildResult(true, start, true, decision.postLink, null);
       this.#emitComplete(result);

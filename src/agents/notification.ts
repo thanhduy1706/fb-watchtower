@@ -14,6 +14,8 @@ export interface Decision {
   changeDetected: boolean;
   postLink: string | null;
   contentPreview?: string | null;
+  /** Every unseen link from this observation — all must be marked seen, even though only postLink is notified. */
+  newLinks?: string[];
 }
 
 export class NotificationAgent {

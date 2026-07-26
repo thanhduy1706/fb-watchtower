@@ -13,13 +13,14 @@ function createMockAgents(overrides: any = {}): any {
       evaluate: vi.fn().mockResolvedValue({
         changeDetected: true,
         postLink: 'https://fb.com/post/123',
+        newLinks: ['https://fb.com/post/123', 'https://fb.com/post/124'],
       }),
     },
     notifier: {
       notify: vi.fn().mockResolvedValue(undefined),
     },
     memory: {
-      update: vi.fn().mockResolvedValue(undefined),
+      addPosts: vi.fn().mockResolvedValue(undefined),
     },
     ...overrides,
   };
@@ -52,7 +53,12 @@ describe('Orchestrator', () => {
     expect(agents.monitor.observe).toHaveBeenCalledOnce();
     expect(agents.reasoner.evaluate).toHaveBeenCalledOnce();
     expect(agents.notifier.notify).toHaveBeenCalledOnce();
-    expect(agents.memory.update).toHaveBeenCalledOnce();
+    // ALL newly-seen links are recorded, not just the notified one — this is
+    // what prevents duplicate notifications for the same post later.
+    expect(agents.memory.addPosts).toHaveBeenCalledWith([
+      'https://fb.com/post/123',
+      'https://fb.com/post/124',
+    ]);
     expect(result.success).toBe(true);
     expect(result.changeDetected).toBe(true);
     expect(result.postLink).toBe('https://fb.com/post/123');
@@ -75,7 +81,7 @@ describe('Orchestrator', () => {
     expect(agents.monitor.observe).toHaveBeenCalledOnce();
     expect(agents.reasoner.evaluate).toHaveBeenCalledOnce();
     expect(agents.notifier.notify).not.toHaveBeenCalled();
-    expect(agents.memory.update).not.toHaveBeenCalled();
+    expect(agents.memory.addPosts).not.toHaveBeenCalled();
     expect(result.success).toBe(true);
     expect(result.changeDetected).toBe(false);
   });
@@ -124,7 +130,7 @@ describe('Orchestrator', () => {
     // Downstream agents should NOT be called
     expect(agents.reasoner.evaluate).not.toHaveBeenCalled();
     expect(agents.notifier.notify).not.toHaveBeenCalled();
-    expect(agents.memory.update).not.toHaveBeenCalled();
+    expect(agents.memory.addPosts).not.toHaveBeenCalled();
   });
 
   // ── Test 5: NotificationAgent failure → memory still updates ─
@@ -139,7 +145,7 @@ describe('Orchestrator', () => {
     const result = await orchestrator.runCycle();
 
     expect(agents.notifier.notify).toHaveBeenCalledOnce();
-    expect(agents.memory.update).toHaveBeenCalledOnce();
+    expect(agents.memory.addPosts).toHaveBeenCalledOnce();
     expect(result.success).toBe(true);
   });
 

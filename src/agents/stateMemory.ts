@@ -4,6 +4,11 @@ import { type AppConfig } from '../core/config.js';
 
 const STATE_KEY = 'last_post';
 
+// Each observation can surface 10+ post IDs; the window must comfortably hold
+// everything visible on the page so an already-notified post never rotates
+// back out of memory and triggers a duplicate notification.
+const MAX_REMEMBERED_POSTS = 100;
+
 export class StateMemory {
   public pool: pkg.Pool;
 
@@ -46,13 +51,19 @@ export class StateMemory {
     if (typeof postLink !== 'string' || postLink.trim() === '') {
       throw new Error('postLink must be a non-empty string');
     }
+    await this.addPosts([postLink]);
+  }
+
+
+  async addPosts(postLinks: string[]): Promise<void> {
+    const links = postLinks.filter((l) => typeof l === 'string' && l.trim() !== '');
+    if (links.length === 0) return;
 
     const recents = await this.getRecentPosts();
-    if (recents.includes(postLink)) {
-      return; 
-    }
+    const fresh = links.filter((l) => !recents.includes(l));
+    if (fresh.length === 0) return;
 
-    const updated = [postLink, ...recents].slice(0, 50);
+    const updated = [...fresh, ...recents].slice(0, MAX_REMEMBERED_POSTS);
     const valueStr = JSON.stringify(updated);
 
     await this.pool.query(

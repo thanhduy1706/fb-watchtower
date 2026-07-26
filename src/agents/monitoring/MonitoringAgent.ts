@@ -265,39 +265,42 @@ export class MonitoringAgent {
       /&quot;story_id&quot;:&quot;([^"&]+)&quot;/g,
     ];
 
-    const extractedIds = new Set<string>();
+    // Map of id → earliest position in the document. Ordering by position (not
+    // regex-pattern order) matters: the top-of-feed post is the newest one, and
+    // downstream logic treats the first ID as "the latest post".
+    const idPositions = new Map<string, number>();
 
-    // Scan raw HTML
-    for (const regex of regexOptions) {
-      let match: RegExpExecArray | null;
-      while ((match = regex.exec(html)) !== null) {
-        const id = match[1];
-        // Basic sanity: must be non-empty and either numeric or a pfbid token
-        if (id && (pfbIdPattern.test(id) || numericIdPattern.test(id))) {
-          extractedIds.add(id);
+    const scan = (source: string): void => {
+      for (const regex of regexOptions) {
+        regex.lastIndex = 0; // reset stateful regex
+        let match: RegExpExecArray | null;
+        while ((match = regex.exec(source)) !== null) {
+          const id = match[1];
+          // Basic sanity: must be non-empty and either numeric or a pfbid token
+          if (id && (pfbIdPattern.test(id) || numericIdPattern.test(id))) {
+            const existing = idPositions.get(id);
+            if (existing === undefined || match.index < existing) {
+              idPositions.set(id, match.index);
+            }
+          }
         }
       }
-    }
+    };
+
+    scan(html);
 
     // Also scan HTML-entity decoded version to catch doubly-encoded blobs
-    if (extractedIds.size === 0) {
+    if (idPositions.size === 0) {
       const decoded = html
         .replaceAll('&quot;', '"')
         .replaceAll('&amp;', '&')
         .replaceAll('&#34;', '"');
-      for (const regex of regexOptions) {
-        regex.lastIndex = 0; // reset stateful regex
-        let match: RegExpExecArray | null;
-        while ((match = regex.exec(decoded)) !== null) {
-          const id = match[1];
-          if (id && (pfbIdPattern.test(id) || numericIdPattern.test(id))) {
-            extractedIds.add(id);
-          }
-        }
-      }
+      scan(decoded);
     }
 
-    return Array.from(extractedIds);
+    return Array.from(idPositions.entries())
+      .sort((a, b) => a[1] - b[1])
+      .map(([id]) => id);
   }
 
   /**

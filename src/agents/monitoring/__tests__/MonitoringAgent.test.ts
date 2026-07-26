@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MonitoringError, MonitoringErrorCode } from '../errors.js';
 import type { MonitoringAgentConfig } from '../../../types/index.js';
 
@@ -38,6 +38,8 @@ function setupBrowserMocks() {
     goto: mockGoto,
     content: mockPageContent,
     close: mockPageClose,
+    url: vi.fn(() => 'https://www.facebook.com/TestPage'),
+    $$: vi.fn().mockResolvedValue([]),
   };
   const context = {
     newPage: mockContextNewPage.mockResolvedValue(page),
@@ -79,18 +81,18 @@ describe('MonitoringAgent', () => {
 
   it('should return a structured observation on success', async () => {
     setupBrowserMocks();
-    mockPageContent.mockResolvedValue('{"top_level_post_id":"12345"}');
+    mockPageContent.mockResolvedValue('{"top_level_post_id":"1234567890123"}');
 
     const agent = createAgent();
     await agent.initialize();
     const observation = await agent.observe();
 
     expect(observation).toMatchObject({
-      latest_post_link: 'https://www.facebook.com/TestPage/posts/12345',
+      latest_post_link: 'https://www.facebook.com/TestPage/posts/1234567890123',
       extracted_at: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
-      content_preview: expect.stringContaining('12345'),
+      content_preview: expect.stringContaining('1234567890123'),
       raw_dom_hash: expect.any(String),
-      candidate_post_links: ['https://www.facebook.com/TestPage/posts/12345'],
+      candidate_post_links: ['https://www.facebook.com/TestPage/posts/1234567890123'],
     });
 
     await agent.shutdown();
@@ -98,27 +100,27 @@ describe('MonitoringAgent', () => {
 
   it('should handle HTML encoded JSON blobs', async () => {
     setupBrowserMocks();
-    mockPageContent.mockResolvedValue('&quot;top_level_post_id&quot;:&quot;99999&quot;');
+    mockPageContent.mockResolvedValue('&quot;top_level_post_id&quot;:&quot;9999999999999&quot;');
 
     const agent = createAgent();
     await agent.initialize();
     const observation = await agent.observe();
 
-    expect(observation.latest_post_link).toBe('https://www.facebook.com/TestPage/posts/99999');
+    expect(observation.latest_post_link).toBe('https://www.facebook.com/TestPage/posts/9999999999999');
 
     await agent.shutdown();
   });
 
   it('should extract IDs from story_fbid JSON blobs', async () => {
     setupBrowserMocks();
-    mockPageContent.mockResolvedValue('{"story_fbid":"55555"}');
+    mockPageContent.mockResolvedValue('{"story_fbid":"5555555555555"}');
 
     const agent = createAgent();
     await agent.initialize();
     const observation = await agent.observe();
 
     expect(observation.latest_post_link).toBe(
-      'https://www.facebook.com/TestPage/posts/55555',
+      'https://www.facebook.com/TestPage/posts/5555555555555',
     );
 
     await agent.shutdown();
@@ -127,7 +129,7 @@ describe('MonitoringAgent', () => {
   it('should extract IDs from permalink URLs', async () => {
     setupBrowserMocks();
     mockPageContent.mockResolvedValue(
-      '<a href="https://www.facebook.com/TestPage/posts/77777">Post</a>',
+      '<a href="https://www.facebook.com/TestPage/posts/7777777777777">Post</a>',
     );
 
     const agent = createAgent();
@@ -135,7 +137,7 @@ describe('MonitoringAgent', () => {
     const observation = await agent.observe();
 
     expect(observation.latest_post_link).toBe(
-      'https://www.facebook.com/TestPage/posts/77777',
+      'https://www.facebook.com/TestPage/posts/7777777777777',
     );
 
     await agent.shutdown();
@@ -160,6 +162,30 @@ describe('MonitoringAgent', () => {
 
   
 
+  it('should order extracted IDs by document position, not regex-pattern order', async () => {
+    setupBrowserMocks();
+    // "post_id" appears FIRST in the document (top of feed = newest post),
+    // "top_level_post_id" appears later. Regex-pattern order would put the
+    // top_level_post_id match first; document order must win.
+    mockPageContent.mockResolvedValue(
+      '{"post_id":"1111111111"} ... {"top_level_post_id":"2222222222"}',
+    );
+
+    const agent = createAgent();
+    await agent.initialize();
+    const observation = await agent.observe();
+
+    expect(observation.candidate_post_links).toEqual([
+      'https://www.facebook.com/TestPage/posts/1111111111',
+      'https://www.facebook.com/TestPage/posts/2222222222',
+    ]);
+    expect(observation.latest_post_link).toBe(
+      'https://www.facebook.com/TestPage/posts/1111111111',
+    );
+
+    await agent.shutdown();
+  });
+
   it('should retry navigation and succeed after transient failure', async () => {
     setupBrowserMocks();
 
@@ -167,14 +193,14 @@ describe('MonitoringAgent', () => {
       .mockRejectedValueOnce(new Error('net::ERR_CONNECTION_RESET'))
       .mockResolvedValueOnce(undefined);
 
-    mockPageContent.mockResolvedValue('{"top_level_post_id":"111"}');
+    mockPageContent.mockResolvedValue('{"top_level_post_id":"1112223334445"}');
 
     const agent = createAgent();
     await agent.initialize();
     const observation = await agent.observe();
 
     expect(mockGoto).toHaveBeenCalledTimes(2);
-    expect(observation.latest_post_link).toBe('https://www.facebook.com/TestPage/posts/111');
+    expect(observation.latest_post_link).toBe('https://www.facebook.com/TestPage/posts/1112223334445');
 
     await agent.shutdown();
   });
@@ -217,7 +243,7 @@ describe('MonitoringAgent', () => {
 
   it('should compute consistent hash for unchanged feed', async () => {
     setupBrowserMocks();
-    mockPageContent.mockResolvedValue('{"top_level_post_id":"123"}');
+    mockPageContent.mockResolvedValue('{"top_level_post_id":"1234567890000"}');
 
     const agent = createAgent();
     await agent.initialize();

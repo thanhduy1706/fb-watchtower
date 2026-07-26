@@ -27,32 +27,34 @@ export class ReasonerAgent {
     const recentPosts = await this.#memory.getRecentPosts();
 
     if (recentPosts.length === 0) {
-      
-      const seedLink = candidates[0];
-      this.#log.info('No prior state found — seeding memory on first run.');
-      await this.#memory.setLastPost(seedLink);
+      // Everything visible on the page at startup is old news — seed ALL of it,
+      // otherwise later cycles would notify about posts that predate the watch.
+      this.#log.info('No prior state found — seeding memory with all observed posts on first run.');
+      await this.#memory.addPosts(candidates);
       return { changeDetected: false, postLink: null };
     }
 
     const cleanRecents = recentPosts.map((p) => this.#normalizeUrl(p));
 
-    
-    const firstNewIndex = cleanCandidates.findIndex(
-      (candidate) => !cleanRecents.includes(candidate),
-    );
 
-    if (firstNewIndex === -1) {
+    const newIndices = cleanCandidates
+      .map((candidate, i) => (cleanRecents.includes(candidate) ? -1 : i))
+      .filter((i) => i !== -1);
+
+    if (newIndices.length === 0) {
       this.#log.info('All observed posts already seen recently — no notification needed.');
       return { changeDetected: false, postLink: null };
     }
 
-    const selectedLink = candidates[firstNewIndex];
-    const cleanSelected = cleanCandidates[firstNewIndex];
+    // Notify only about the top-most unseen post, but report every unseen link
+    // so all of them get marked seen — the same post often appears under two ID
+    // formats (pfbid + numeric) and must not trigger a second notification.
+    const newLinks = newIndices.map((i) => candidates[i]);
+    const selectedLink = newLinks[0];
 
-    
     this.#log.info(`New post detected! Previous: ${cleanRecents[0]?.slice(0, 60) ?? 'none'}…`);
-    this.#log.info(`New link: ${cleanSelected.slice(0, 60)}…`);
-    return { changeDetected: true, postLink: selectedLink, contentPreview: content_preview };
+    this.#log.info(`New link: ${this.#normalizeUrl(selectedLink).slice(0, 60)}…`);
+    return { changeDetected: true, postLink: selectedLink, contentPreview: content_preview, newLinks };
   }
 
 

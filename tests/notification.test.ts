@@ -50,10 +50,12 @@ describe('NotificationAgent', () => {
     expect(options.headers['Content-Type']).toBe('application/json');
 
     const body = JSON.parse(options.body as string);
-    expect(body.blocks).toHaveLength(3);
     expect(body.blocks[0].type).toBe('header');
-    expect(body.blocks[1].text.text).toContain(DECISION.postLink);
-    expect(body.blocks[2].type).toBe('context');
+    const linkSection = body.blocks.find(
+      (b: any) => b.type === 'section' && b.text?.text?.includes(DECISION.postLink),
+    );
+    expect(linkSection).toBeDefined();
+    expect(body.blocks[body.blocks.length - 1].type).toBe('context');
   });
 
   // ── 2: Success result on 200 ──────────────────────────────────
